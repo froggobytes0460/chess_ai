@@ -13,7 +13,8 @@ enum class PieceType : uint8_t { KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN };
 enum class Color : uint8_t { WHITE, BLACK };
 
 // Enum indicating each bit's square position on a bitboard.
-enum class Square : uint8_t {
+enum class Square : int8_t {
+  NONE = -1,
   A1,
   B1,
   C1,
@@ -78,6 +79,14 @@ enum class Square : uint8_t {
   F8,
   G8,
   H8
+};
+
+// The castling rights listed as bit positions on an unsigned integer.
+enum class CastlingRights : uint8_t {
+  WHITE_KINGSIDE = 1 << 0,
+  BLACK_KINGSIDE = 1 << 1,
+  WHITE_QUEENSIDE = 1 << 2,
+  BLACK_QUEENSIDE = 1 << 3,
 };
 
 #endif  // !TYPES_HPP

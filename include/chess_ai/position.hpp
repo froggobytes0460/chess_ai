@@ -21,7 +21,8 @@ class Position {
   friend class PositionTest;
 
  public:
-  Position(std::string_view fen);
+  Position();
+  explicit Position(std::string_view fen);
   auto toFEN() -> std::string;
 };
 

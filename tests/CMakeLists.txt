@@ -8,7 +8,6 @@ set(gtest_force_shared_crt
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-enable_testing()
 include(GoogleTest)
 
 # Registers a GTest executable: builds test_source, links chess_engine +
@@ -19,3 +18,5 @@ function(add_chess_test test_name test_source)
                                              GTest::gtest_main)
   gtest_discover_tests(${test_name})
 endfunction()
+
+add_chess_test(test_fen ./test_fen.cpp)

@@ -32,5 +32,6 @@ target_link_libraries(main PRIVATE chess_engine compiler_flags)
 
 if(generate_tests)
   message(STATUS "Test suite enabled, adding tests/ directory...")
+  enable_testing()
   add_subdirectory(tests/)
 endif()

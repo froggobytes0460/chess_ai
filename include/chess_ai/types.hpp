@@ -78,7 +78,7 @@ enum class Square : int8_t {
   E8,
   F8,
   G8,
-  H8
+  H8,
 };
 
 // The castling rights listed as bit positions on an unsigned integer.

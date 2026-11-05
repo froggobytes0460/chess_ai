@@ -12,6 +12,7 @@ class Position {
   std::array<std::array<BitBoard, 6>, 2> pieces_;
   std::array<BitBoard, 2> occupied_;
   BitBoard occupied_all_;
+  uint64_t zobrist_key_;
   uint16_t full_move_counter_;
   uint16_t half_move_clock_;
   uint8_t castling_rights_bits_;
@@ -23,7 +24,8 @@ class Position {
  public:
   Position();
   explicit Position(std::string_view fen);
-  auto toFEN() -> std::string;
+  [[nodiscard]] auto toFEN() -> std::string;
+  [[nodiscard]] auto computeZobristKey() const -> uint64_t;
 };
 
 #endif  // !POSITION_HPP

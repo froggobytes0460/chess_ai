@@ -140,4 +140,6 @@ Position::Position(std::string_view fen)
     }
     occupied_all_ |= occupied_[col];
   }
+
+  zobrist_key_ = computeZobristKey();
 }

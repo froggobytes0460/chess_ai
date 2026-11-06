@@ -21,3 +21,4 @@ endfunction()
 
 add_chess_test(test_fen ./test_fen.cpp)
 add_chess_test(test_move ./test_move.cpp)
+add_chess_test(test_attacks ./test_attacks.cpp)

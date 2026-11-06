@@ -24,15 +24,6 @@ constexpr void unsetBit(BitBoard& bb, Square sq) {
   return std::popcount(bb);
 }
 
-// Returns the square position of the MSB of bitboard. Returns `Square::NONE` if
-// bb == 0.
-[[nodiscard]] constexpr auto getMSB(BitBoard bb) -> Square {
-  if (bb == 0) {
-    return Square::NONE;
-  }
-  return static_cast<Square>(63 - std::countl_zero(bb));
-}
-
 // Returns the square position of the LSB of bitboard. Returns `Square::NONE` if
 // bb == 0.
 [[nodiscard]] constexpr auto getLSB(BitBoard bb) -> Square {

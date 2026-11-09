@@ -11,11 +11,10 @@ target_compile_options(compiler_flags INTERFACE -Wall -Wextra -Werror)
 
 if(APPLE)
   execute_process(
-    COMMAND xcrun --sdk macosx --show-sdk-path
-    OUTPUT_VARIABLE CHESS_AI_SDK_PATH
+    COMMAND xcrun --show-sdk-path
+    OUTPUT_VARIABLE MACOS_SDK_PATH
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  target_compile_options(compiler_flags INTERFACE -isysroot
-                                                  "${CHESS_AI_SDK_PATH}")
+  target_compile_options(compiler_flags INTERFACE -isysroot "${MACOS_SDK_PATH}")
 endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.hpp"

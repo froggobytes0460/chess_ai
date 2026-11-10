@@ -6,6 +6,7 @@
 
 // Sets the square bit on a bitboard.
 constexpr void setBit(BitBoard& bb, Square sq) {
+  // NOLINTNEXTLINE(clang-analyzer-core.BitwiseShift)
   bb |= (1ULL << static_cast<unsigned>(sq));
 }
 

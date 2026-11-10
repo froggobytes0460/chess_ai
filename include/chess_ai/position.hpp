@@ -24,8 +24,35 @@ class Position {
  public:
   Position();
   explicit Position(std::string_view fen);
+
   [[nodiscard]] auto toFEN() -> std::string;
   [[nodiscard]] auto computeZobristKey() const -> uint64_t;
+
+  // Returns the bitboard of pieces of `type` belonging to `color`.
+  [[nodiscard]] constexpr auto pieces(Color color, PieceType type) const
+      -> BitBoard {
+    return pieces_[static_cast<size_t>(color)][static_cast<size_t>(type)];
+  }
+
+  // Returns the combined occupancy bitboard for `color`.
+  [[nodiscard]] constexpr auto occupied(Color color) const -> BitBoard {
+    return occupied_[static_cast<size_t>(color)];
+  }
+
+  // Returns the combined occupancy bitboard for both colors.
+  [[nodiscard]] constexpr auto occupiedAll() const -> BitBoard {
+    return occupied_all_;
+  }
+
+  // Returns the current en-passant target square, or `Square::NONE`.
+  [[nodiscard]] constexpr auto enPassantSquare() const -> Square {
+    return en_passant_;
+  }
+
+  // Returns the side to move.
+  [[nodiscard]] constexpr auto sideToMove() const -> Color {
+    return side_to_move_;
+  }
 };
 
 #endif  // !POSITION_HPP

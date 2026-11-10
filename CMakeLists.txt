@@ -31,6 +31,7 @@ add_executable(main src/main.cpp)
 target_link_libraries(main PRIVATE chess_engine compiler_flags)
 
 if(build_tools)
+  message(STATUS "Building tool")
   add_subdirectory(tools/)
 endif()
 

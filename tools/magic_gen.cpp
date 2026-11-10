@@ -116,7 +116,7 @@ auto bishopAttackSlow(Square sq, BitBoard occupied) -> BitBoard {
   return attacks;
 }
 
-auto generateSpaseRandomBits(std::mt19937_64& rng) -> BitBoard {
+auto generateSpaseRandomBits(std::mt19937_64& rng) -> uint64_t {
   uint64_t random = rng();
   for (int i = 0; i <= 3; ++i) {
     random &= rng();
@@ -125,7 +125,7 @@ auto generateSpaseRandomBits(std::mt19937_64& rng) -> BitBoard {
 }
 
 auto findMagic(int n, const std::vector<BitBoard>& occupancies,
-               const std::vector<BitBoard>& attacks) -> BitBoard {
+               const std::vector<BitBoard>& attacks) -> uint64_t {
   // NOLINTNEXTLINE(bugprone-random-generator-seed) Need deterministic output
   std::mt19937_64 rng(RANDOM_SEED);
   std::vector<BitBoard> used(1ULL << n);
@@ -134,7 +134,7 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
   uint32_t curr_epoch = 0;
 
   for (;;) {
-    BitBoard magic = generateSpaseRandomBits(rng);
+    uint64_t magic = generateSpaseRandomBits(rng);
     curr_epoch++;
 
     if (curr_epoch == 0) {
@@ -161,7 +161,7 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
 }
 
 template <auto maskFn, auto attackSlowFn>
-auto findMagicForSquare(Square sq) -> BitBoard {
+auto findMagicForSquare(Square sq) -> uint64_t {
   BitBoard mask = maskFn(sq);
   std::vector<BitBoard> subsets;
   BitBoard subset = 0;
@@ -183,18 +183,18 @@ auto findMagicForSquare(Square sq) -> BitBoard {
 
 // NOLINTNEXTLINE(bugprone-exception-escape) offline tool, crash-on-oom is fine
 auto main() -> int {
-  std::cout << "constexpr std::array<BitBoard, 64> ROOK_MAGICS = {\n";
+  std::cout << "constexpr std::array<uint64_t, 64> ROOK_MAGICS = {\n";
   for (int sq = 0; sq < 64; ++sq) {
-    BitBoard magic =
+    uint64_t magic =
         findMagicForSquare<rookMask, rookAttackSlow>(static_cast<Square>(sq));
     std::cout << "    0x" << std::setfill('0') << std::setw(16) << std::hex
               << std::uppercase << magic << "ULL,\n";
   }
   std::cout << "};\n" << std::dec << std::nouppercase;
 
-  std::cout << "constexpr std::array<BitBoard, 64> BISHOP_MAGICS = {\n";
+  std::cout << "constexpr std::array<uint64_t, 64> BISHOP_MAGICS = {\n";
   for (int sq = 0; sq < 64; ++sq) {
-    BitBoard magic = findMagicForSquare<bishopMask, bishopAttackSlow>(
+    uint64_t magic = findMagicForSquare<bishopMask, bishopAttackSlow>(
         static_cast<Square>(sq));
     std::cout << "    0x" << std::setfill('0') << std::setw(16) << std::hex
               << std::uppercase << magic << "ULL,\n";

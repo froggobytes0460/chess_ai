@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(generate_tests "Builds the project tests" OFF)
+option(build_tools "Builds extra tools (offline scripts)" OFF)
 
 add_library(compiler_flags INTERFACE)
 target_compile_options(compiler_flags INTERFACE -Wall -Wextra -Werror)
@@ -28,6 +29,10 @@ target_link_libraries(chess_engine PUBLIC compiler_flags)
 
 add_executable(main src/main.cpp)
 target_link_libraries(main PRIVATE chess_engine compiler_flags)
+
+if(build_tools)
+  add_subdirectory(tools/)
+endif()
 
 if(generate_tests)
   message(STATUS "Test suite enabled, adding tests/ directory...")

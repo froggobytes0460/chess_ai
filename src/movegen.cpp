@@ -108,10 +108,43 @@ void genPawnCaptures(const Position& position, Color color, MoveList& moves) {
   }
 }
 
+template <PieceType type, auto attacksOf>
+void generateLeapingMoves(const Position& position, MoveList& moves) {
+  Color color = position.sideToMove();
+  BitBoard own_occupied = position.occupied(color);
+  Color enemy = color == Color::WHITE ? Color::BLACK : Color::WHITE;
+  BitBoard enemy_occupied = position.occupied(enemy);
+
+  BitBoard pieces = position.pieces(color, type);
+  while (pieces != 0) {
+    Square from = popLSB(pieces);
+    BitBoard targets = attacksOf(from) & ~own_occupied;
+
+    BitBoard quiet_moves = targets & ~enemy_occupied;
+    while (quiet_moves != 0) {
+      moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
+    }
+
+    BitBoard captures = targets & enemy_occupied;
+    while (captures != 0) {
+      moves.push(Move(from, popLSB(captures), MoveFlag::CAPTURE));
+    }
+  }
+}
 }  // namespace
 
 void generatePawnMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
   genPawnPushes(position, color, moves);
   genPawnCaptures(position, color, moves);
+}
+
+void generateKnightMoves(const Position& position, MoveList& moves) {
+  generateLeapingMoves<PieceType::KNIGHT, knightAttacks>(position, moves);
+}
+
+// Generates all pseudo-legal king moves for the side to move (castling is
+// generated separately; this covers single-step king moves only).
+void generateKingMoves(const Position& position, MoveList& moves) {
+  generateLeapingMoves<PieceType::KING, kingAttacks>(position, moves);
 }

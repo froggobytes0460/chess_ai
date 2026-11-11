@@ -53,6 +53,11 @@ class Position {
   [[nodiscard]] constexpr auto sideToMove() const -> Color {
     return side_to_move_;
   }
+
+  // Returns castling rights bit storage as a 1-byte unsigned integer
+  [[nodiscard]] constexpr auto castlingRightsBits() const -> uint8_t {
+    return castling_rights_bits_;
+  }
 };
 
 #endif  // !POSITION_HPP

@@ -116,14 +116,6 @@ auto bishopAttackSlow(Square sq, BitBoard occupied) -> BitBoard {
   return attacks;
 }
 
-auto generateSpaseRandomBits(std::mt19937_64& rng) -> uint64_t {
-  uint64_t random = rng();
-  for (int i = 0; i <= 3; ++i) {
-    random &= rng();
-  }
-  return random;
-}
-
 auto findMagic(int n, const std::vector<BitBoard>& occupancies,
                const std::vector<BitBoard>& attacks) -> uint64_t {
   // NOLINTNEXTLINE(bugprone-random-generator-seed) Need deterministic output
@@ -134,7 +126,8 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
   uint32_t curr_epoch = 0;
 
   for (;;) {
-    uint64_t magic = generateSpaseRandomBits(rng);
+    // AND a couple random `uint64_t` to generate sparse bits
+    uint64_t magic = rng() & rng() & rng();
     curr_epoch++;
 
     if (curr_epoch == 0) {

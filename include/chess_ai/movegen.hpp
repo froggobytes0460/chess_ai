@@ -12,13 +12,8 @@
 // en passant, promotions) for the side to move, appending them to `moves`.
 void generatePawnMoves(const Position& position, MoveList& moves);
 
-// Generates all pseudo-legal knight moves for the side to move.
-void generateKnightMoves(const Position& position, MoveList& moves);
-
-// Generates all pseudo-legal king moves for the side to move (castling is
-// generated separately; this covers single-step king moves only).
-void generateKingMoves(const Position& position, MoveList& moves);
-
+// Generates all pseudo-legal moves (pawn, knight, bishop, rook, queen, king)
+// for the side to move, excluding castling, appending them to `out`.
 void generatePseudoLegalMoves(const Position& position, MoveList& out);
 
 #endif  // !MOVEGEN_HPP

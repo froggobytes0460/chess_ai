@@ -21,6 +21,8 @@ inline auto getFenCharFromPiece(Color col, PieceType pt) -> char {
           return 'N';
         case PieceType::PAWN:
           return 'P';
+        default:
+          return '?';
       }
     case Color::BLACK:
       switch (pt) {
@@ -36,7 +38,11 @@ inline auto getFenCharFromPiece(Color col, PieceType pt) -> char {
           return 'n';
         case PieceType::PAWN:
           return 'p';
+        default:
+          return '?';
       }
+    default:
+      return '?';
   }
 }
 

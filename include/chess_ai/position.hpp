@@ -19,8 +19,6 @@ class Position {
   Color side_to_move_;
   Square en_passant_;
 
-  friend class PositionTest;
-
  public:
   Position();
   explicit Position(std::string_view fen);
@@ -57,6 +55,16 @@ class Position {
   // Returns castling rights bit storage as a 1-byte unsigned integer
   [[nodiscard]] constexpr auto castlingRightsBits() const -> uint8_t {
     return castling_rights_bits_;
+  }
+
+  // Returns counter of full moves
+  [[nodiscard]] constexpr auto fullMoveCounter() const -> uint16_t {
+    return full_move_counter_;
+  }
+
+  // Returns the half-move clock
+  [[nodiscard]] constexpr auto halfMoveClock() const -> uint16_t {
+    return half_move_clock_;
   }
 };
 

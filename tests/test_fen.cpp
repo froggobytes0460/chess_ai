@@ -12,42 +12,6 @@ constexpr const char* K_START_POS =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 }  // namespace
 
-class PositionTest : public ::testing::Test {
- protected:
-  static auto pieceBoard(const Position& pos, Color col, PieceType pt)
-      -> BitBoard {
-    return pos.pieces_[static_cast<unsigned>(col)][static_cast<unsigned>(pt)];
-  }
-
-  static auto occupied(const Position& pos, Color col) -> BitBoard {
-    return pos.occupied_[static_cast<unsigned>(col)];
-  }
-
-  static auto occupiedAll(const Position& pos) -> BitBoard {
-    return pos.occupied_all_;
-  }
-
-  static auto castlingRights(const Position& pos) -> uint8_t {
-    return pos.castling_rights_bits_;
-  }
-
-  static auto sideToMove(const Position& pos) -> Color {
-    return pos.side_to_move_;
-  }
-
-  static auto enPassant(const Position& pos) -> Square {
-    return pos.en_passant_;
-  }
-
-  static auto halfmoveClock(const Position& pos) -> uint16_t {
-    return pos.half_move_clock_;
-  }
-
-  static auto fullmoveNumber(const Position& pos) -> uint16_t {
-    return pos.full_move_counter_;
-  }
-};
-
 // --- Piece placement parsing (parameterized: one case per piece/color) ---
 
 struct PieceBoardCase {
@@ -56,14 +20,12 @@ struct PieceBoardCase {
   BitBoard expected;
 };
 
-class StartPosPieceBoardTest
-    : public PositionTest,
-      public ::testing::WithParamInterface<PieceBoardCase> {};
+class StartPosPieceBoardTest : public ::testing::TestWithParam<PieceBoardCase> {
+};
 
 TEST_P(StartPosPieceBoardTest, MatchesKnownBitboard) {
   Position pos(K_START_POS);
-  EXPECT_EQ(pieceBoard(pos, GetParam().color, GetParam().type),
-            GetParam().expected);
+  EXPECT_EQ(pos.pieces(GetParam().color, GetParam().type), GetParam().expected);
 }
 
 auto nameStartPosPieceBoardCase(
@@ -102,43 +64,41 @@ INSTANTIATE_TEST_SUITE_P(
                                      uint64_t{0x1000000000000000}}),
     nameStartPosPieceBoardCase);
 
-TEST_F(PositionTest, EmptyBoardAllZero) {
+TEST(PositionTest, EmptyBoardAllZero) {
   Position pos("8/8/8/8/8/8/8/8 w - - 0 1");
   for (int c = 0; c < 2; ++c) {
     for (int p = 0; p < 6; ++p) {
-      EXPECT_EQ(
-          pieceBoard(pos, static_cast<Color>(c), static_cast<PieceType>(p)),
-          uint64_t{0})
+      EXPECT_EQ(pos.pieces(static_cast<Color>(c), static_cast<PieceType>(p)),
+                uint64_t{0})
           << "color=" << c << " piece=" << p;
     }
   }
 }
 
-TEST_F(PositionTest, SparsePiecePlacement) {
+TEST(PositionTest, SparsePiecePlacement) {
   // White king e1, black king e8, white rook a1, black knight g6.
   Position pos("4k3/8/6n1/8/8/8/8/R3K3 w - - 0 1");
-  EXPECT_EQ(pieceBoard(pos, Color::WHITE, PieceType::KING),
+  EXPECT_EQ(pos.pieces(Color::WHITE, PieceType::KING),
             uint64_t{0x0000000000000010});  // e1
-  EXPECT_EQ(pieceBoard(pos, Color::BLACK, PieceType::KING),
+  EXPECT_EQ(pos.pieces(Color::BLACK, PieceType::KING),
             uint64_t{0x1000000000000000});  // e8
-  EXPECT_EQ(pieceBoard(pos, Color::WHITE, PieceType::ROOK),
+  EXPECT_EQ(pos.pieces(Color::WHITE, PieceType::ROOK),
             uint64_t{0x0000000000000001});  // a1
-  EXPECT_EQ(pieceBoard(pos, Color::BLACK, PieceType::KNIGHT),
+  EXPECT_EQ(pos.pieces(Color::BLACK, PieceType::KNIGHT),
             uint64_t{0x0000400000000000});  // g6
 }
 
 // --- Side to move (parameterized) ---
 
 class SideToMoveTest
-    : public PositionTest,
-      public ::testing::WithParamInterface<std::tuple<char, Color>> {};
+    : public ::testing::TestWithParam<std::tuple<char, Color>> {};
 
 TEST_P(SideToMoveTest, ParsedCorrectly) {
   auto [fen_char, expected] = GetParam();
   std::string fen = K_START_POS;
   fen[fen.find(" w ") + 1] = fen_char;
   Position pos(fen);
-  EXPECT_EQ(sideToMove(pos), expected);
+  EXPECT_EQ(pos.sideToMove(), expected);
 }
 
 // NOLINTNEXTLINE(modernize-use-string-view)
@@ -160,16 +120,14 @@ struct CastlingCase {
   uint8_t expected;
 };
 
-class CastlingRightsTest : public PositionTest,
-                           public ::testing::WithParamInterface<CastlingCase> {
-};
+class CastlingRightsTest : public ::testing::TestWithParam<CastlingCase> {};
 
 TEST_P(CastlingRightsTest, ParsedCorrectly) {
   std::string fen =
       std::string("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w ") +
       GetParam().fen_field + " - 0 1";
   Position pos(fen);
-  EXPECT_EQ(castlingRights(pos), GetParam().expected);
+  EXPECT_EQ(pos.castlingRightsBits(), GetParam().expected);
 }
 
 auto nameCastlingCase(const ::testing::TestParamInfo<CastlingCase>& info)
@@ -194,14 +152,14 @@ INSTANTIATE_TEST_SUITE_P(
 
 // --- En passant ---
 
-TEST_F(PositionTest, EnPassantNone) {
+TEST(PositionTest, EnPassantNone) {
   Position pos(K_START_POS);
-  EXPECT_EQ(enPassant(pos), Square::NONE);
+  EXPECT_EQ(pos.enPassantSquare(), Square::NONE);
 }
 
-TEST_F(PositionTest, EnPassantSet) {
+TEST(PositionTest, EnPassantSet) {
   Position pos("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
-  EXPECT_EQ(enPassant(pos), Square::E3);
+  EXPECT_EQ(pos.enPassantSquare(), Square::E3);
 }
 
 // --- Halfmove clock / fullmove number (parameterized) ---
@@ -212,16 +170,15 @@ struct CounterCase {
   uint16_t expected_fullmove;
 };
 
-class CountersTest : public PositionTest,
-                     public ::testing::WithParamInterface<CounterCase> {};
+class CountersTest : public ::testing::TestWithParam<CounterCase> {};
 
 TEST_P(CountersTest, ParsedCorrectly) {
   std::string fen =
       std::string("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq ") +
       GetParam().fen_suffix;
   Position pos(fen);
-  EXPECT_EQ(halfmoveClock(pos), GetParam().expected_halfmove);
-  EXPECT_EQ(fullmoveNumber(pos), GetParam().expected_fullmove);
+  EXPECT_EQ(pos.halfMoveClock(), GetParam().expected_halfmove);
+  EXPECT_EQ(pos.fullMoveCounter(), GetParam().expected_fullmove);
 }
 
 auto nameCounterCase(const ::testing::TestParamInfo<CounterCase>& info)
@@ -237,24 +194,23 @@ INSTANTIATE_TEST_SUITE_P(Counters, CountersTest,
 
 // --- Derived occupancy ---
 
-TEST_F(PositionTest, OccupancyMatchesStartPos) {
+TEST(PositionTest, OccupancyMatchesStartPos) {
   Position pos(K_START_POS);
-  EXPECT_EQ(occupied(pos, Color::WHITE), uint64_t{0x000000000000FFFF});
-  EXPECT_EQ(occupied(pos, Color::BLACK), uint64_t{0xFFFF000000000000});
-  EXPECT_EQ(occupiedAll(pos), uint64_t{0xFFFF00000000FFFF});
+  EXPECT_EQ(pos.occupied(Color::WHITE), uint64_t{0x000000000000FFFF});
+  EXPECT_EQ(pos.occupied(Color::BLACK), uint64_t{0xFFFF000000000000});
+  EXPECT_EQ(pos.occupiedAll(), uint64_t{0xFFFF00000000FFFF});
 }
 
-TEST_F(PositionTest, OccupancyEmptyBoard) {
+TEST(PositionTest, OccupancyEmptyBoard) {
   Position pos("8/8/8/8/8/8/8/8 w - - 0 1");
-  EXPECT_EQ(occupied(pos, Color::WHITE), uint64_t{0});
-  EXPECT_EQ(occupied(pos, Color::BLACK), uint64_t{0});
-  EXPECT_EQ(occupiedAll(pos), uint64_t{0});
+  EXPECT_EQ(pos.occupied(Color::WHITE), uint64_t{0});
+  EXPECT_EQ(pos.occupied(Color::BLACK), uint64_t{0});
+  EXPECT_EQ(pos.occupiedAll(), uint64_t{0});
 }
 
 // --- toFEN round-trip (parameterized: one case per FEN variant) ---
 
-class RoundTripTest : public PositionTest,
-                      public ::testing::WithParamInterface<const char*> {};
+class RoundTripTest : public ::testing::TestWithParam<const char*> {};
 
 TEST_P(RoundTripTest, MatchesInputFen) {
   std::string fen = GetParam();

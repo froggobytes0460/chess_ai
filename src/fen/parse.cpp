@@ -1,3 +1,4 @@
+#include <array>
 #include <charconv>
 #include <chess_ai/bitops.hpp>
 #include <chess_ai/position.hpp>
@@ -5,48 +6,101 @@
 #include <string_view>
 
 namespace {
-// Returns the {color, piece} pair for a FEN piece character, or
-// {Color::WHITE, PieceType::KING} with `ok` set false if `c` is not a valid
-// piece character.
+// Returns the {color, piecetype, piece} pair for a FEN piece character, or
+// {Color::WHITE, PieceType::KING, Piece::NONE} with `ok` set false if `c` is
+// not a valid piece character.
 struct FenPiece {
   Color color;
   PieceType type;
-  bool ok;
+  Piece piece;
 };
 
 inline auto getPieceFromFenChar(char c) -> FenPiece {
   switch (c) {
     case 'K':
-      return {.color = Color::WHITE, .type = PieceType::KING, .ok = true};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::KING,
+          .piece = Piece::WHITE_KING,
+      };
     case 'Q':
-      return {.color = Color::WHITE, .type = PieceType::QUEEN, .ok = true};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::QUEEN,
+          .piece = Piece::WHITE_QUEEN,
+      };
     case 'R':
-      return {.color = Color::WHITE, .type = PieceType::ROOK, .ok = true};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::ROOK,
+          .piece = Piece::WHITE_ROOK,
+      };
     case 'B':
-      return {.color = Color::WHITE, .type = PieceType::BISHOP, .ok = true};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::BISHOP,
+          .piece = Piece::WHITE_BISHOP,
+      };
     case 'N':
-      return {.color = Color::WHITE, .type = PieceType::KNIGHT, .ok = true};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::KNIGHT,
+          .piece = Piece::WHITE_KNIGHT,
+      };
     case 'P':
-      return {.color = Color::WHITE, .type = PieceType::PAWN, .ok = true};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::PAWN,
+          .piece = Piece::WHITE_PAWN,
+      };
     case 'k':
-      return {.color = Color::BLACK, .type = PieceType::KING, .ok = true};
+      return {
+          .color = Color::BLACK,
+          .type = PieceType::KING,
+          .piece = Piece::BLACK_KING,
+      };
     case 'q':
-      return {.color = Color::BLACK, .type = PieceType::QUEEN, .ok = true};
+      return {
+          .color = Color::BLACK,
+          .type = PieceType::QUEEN,
+          .piece = Piece::BLACK_QUEEN,
+      };
     case 'r':
-      return {.color = Color::BLACK, .type = PieceType::ROOK, .ok = true};
+      return {
+          .color = Color::BLACK,
+          .type = PieceType::ROOK,
+          .piece = Piece::BLACK_ROOK,
+      };
     case 'b':
-      return {.color = Color::BLACK, .type = PieceType::BISHOP, .ok = true};
+      return {
+          .color = Color::BLACK,
+          .type = PieceType::BISHOP,
+          .piece = Piece::BLACK_BISHOP,
+      };
     case 'n':
-      return {.color = Color::BLACK, .type = PieceType::KNIGHT, .ok = true};
+      return {
+          .color = Color::BLACK,
+          .type = PieceType::KNIGHT,
+          .piece = Piece::BLACK_KNIGHT,
+      };
     case 'p':
-      return {.color = Color::BLACK, .type = PieceType::PAWN, .ok = true};
+      return {
+          .color = Color::BLACK,
+          .type = PieceType::PAWN,
+          .piece = Piece::BLACK_PAWN,
+      };
     default:
-      return {.color = Color::WHITE, .type = PieceType::KING, .ok = false};
+      return {
+          .color = Color::WHITE,
+          .type = PieceType::KING,
+          .piece = Piece::NONE,
+      };
   }
 }
 
 void parsePiecePlacement(std::string_view field,
-                         std::array<std::array<BitBoard, 6>, 2>& pieces) {
+                         std::array<std::array<BitBoard, 6>, 2>& pieces,
+                         std::array<Piece, 64>& board) {
   int rank = 7;
   int file = 0;
   for (const char c : field) {
@@ -64,6 +118,7 @@ void parsePiecePlacement(std::string_view field,
     setBit(pieces[static_cast<unsigned>(piece.color)]
                  [static_cast<unsigned>(piece.type)],
            sq);
+    board[static_cast<unsigned>(sq)] = piece.piece;
     ++file;
   }
 }
@@ -118,6 +173,7 @@ auto nextField(std::string_view& rest) -> std::string_view {
 
 Position::Position(std::string_view fen)
     : pieces_{},  // NOLINT(readability-trailing-comma)
+      board_{},
       occupied_{},
       occupied_all_{},
       full_move_counter_{},
@@ -127,7 +183,7 @@ Position::Position(std::string_view fen)
       en_passant_{Square::NONE} {
   std::string_view rest = fen;
 
-  parsePiecePlacement(nextField(rest), pieces_);
+  parsePiecePlacement(nextField(rest), pieces_, board_);
   side_to_move_ = (nextField(rest) == "w") ? Color::WHITE : Color::BLACK;
   castling_rights_bits_ = parseCastlingRights(nextField(rest));
   en_passant_ = parseEnPassant(nextField(rest));

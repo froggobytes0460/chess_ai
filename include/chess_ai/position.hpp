@@ -10,6 +10,7 @@
 class Position {
  private:
   std::array<std::array<BitBoard, 6>, 2> pieces_;
+  std::array<Piece, 64> board_;
   std::array<BitBoard, 2> occupied_;
   BitBoard occupied_all_;
   uint64_t zobrist_key_;
@@ -30,6 +31,10 @@ class Position {
   [[nodiscard]] constexpr auto pieces(Color color, PieceType type) const
       -> BitBoard {
     return pieces_[static_cast<size_t>(color)][static_cast<size_t>(type)];
+  }
+
+  [[nodiscard]] constexpr auto pieceAt(Square sq) const -> Piece {
+    return board_[static_cast<size_t>(sq)];
   }
 
   // Returns the combined occupancy bitboard for `color`.

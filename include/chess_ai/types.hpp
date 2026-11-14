@@ -12,6 +12,22 @@ enum class PieceType : uint8_t { KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN };
 // The players of the game.
 enum class Color : uint8_t { WHITE, BLACK };
 
+enum class Piece : uint8_t {
+  NONE,
+  WHITE_KING,
+  WHITE_QUEEN,
+  WHITE_ROOK,
+  WHITE_BISHOP,
+  WHITE_KNIGHT,
+  WHITE_PAWN,
+  BLACK_KING,
+  BLACK_QUEEN,
+  BLACK_ROOK,
+  BLACK_BISHOP,
+  BLACK_KNIGHT,
+  BLACK_PAWN,
+};
+
 // Enum indicating each bit's square position on a bitboard.
 enum class Square : int8_t {
   NONE = -1,
@@ -88,5 +104,16 @@ enum class CastlingRights : uint8_t {
   WHITE_QUEENSIDE = 1 << 2,
   BLACK_QUEENSIDE = 1 << 3,
 };
+
+[[nodiscard]] constexpr auto makePiece(Color col, PieceType pt) -> Piece {
+  return static_cast<Piece>(1 + (static_cast<uint8_t>(col) * 6) +
+                            static_cast<uint8_t>(pt));
+}
+[[nodiscard]] constexpr auto colorOf(Piece piece) -> Color {
+  return static_cast<Color>((static_cast<uint8_t>(piece) - 1) / 6);
+}
+[[nodiscard]] constexpr auto typeOf(Piece piece) -> PieceType {
+  return static_cast<PieceType>((static_cast<uint8_t>(piece) - 1) % 6);
+}
 
 #endif  // !TYPES_HPP

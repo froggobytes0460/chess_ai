@@ -6,6 +6,7 @@
 
 Position::Position()
     : pieces_{},  // NOLINT(readability-trailing-comma)
+      board_{},
       occupied_{},
       occupied_all_{},
       full_move_counter_{},

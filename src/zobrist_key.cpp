@@ -6,7 +6,7 @@
 #include <random>
 
 namespace {
-constexpr uint64_t RANDOM_SEED = 0X00EF306E22F98FD4;
+constexpr uint64_t RANDOM_SEED{0X00EF306E22F98FD4};
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 std::array<std::array<std::array<uint64_t, 64>, 6>, 2> keys_piece{};

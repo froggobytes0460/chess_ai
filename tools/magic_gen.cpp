@@ -120,9 +120,9 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
                const std::vector<BitBoard>& attacks) -> uint64_t {
   // NOLINTNEXTLINE(bugprone-random-generator-seed) Need deterministic output
   std::mt19937_64 rng(RANDOM_SEED);
-  std::vector<BitBoard> used(1ULL << n);
+  std::vector<BitBoard> used(uint64_t{1} << n);
 
-  std::vector<uint32_t> filled(1ULL << n, 0);
+  std::vector<uint32_t> filled(uint64_t{1} << n, 0);
   uint32_t curr_epoch = 0;
 
   for (;;) {
@@ -131,7 +131,7 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
     curr_epoch++;
 
     if (curr_epoch == 0) {
-      filled.assign(1ULL << n, 0);
+      filled.assign(uint64_t{1} << n, 0);
       curr_epoch = 1;
     }
 

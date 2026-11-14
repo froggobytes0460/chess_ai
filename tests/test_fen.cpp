@@ -82,16 +82,24 @@ auto nameStartPosPieceBoardCase(
 
 INSTANTIATE_TEST_SUITE_P(
     StartPos, StartPosPieceBoardTest,
-    ::testing::Values(
-        PieceBoardCase{Color::WHITE, PieceType::PAWN, 0x000000000000FF00ULL},
-        PieceBoardCase{Color::BLACK, PieceType::PAWN, 0x00FF000000000000ULL},
-        PieceBoardCase{Color::WHITE, PieceType::ROOK, 0x0000000000000081ULL},
-        PieceBoardCase{Color::BLACK, PieceType::ROOK, 0x8100000000000000ULL},
-        PieceBoardCase{Color::WHITE, PieceType::KNIGHT, 0x0000000000000042ULL},
-        PieceBoardCase{Color::WHITE, PieceType::BISHOP, 0x0000000000000024ULL},
-        PieceBoardCase{Color::WHITE, PieceType::QUEEN, 0x0000000000000008ULL},
-        PieceBoardCase{Color::WHITE, PieceType::KING, 0x0000000000000010ULL},
-        PieceBoardCase{Color::BLACK, PieceType::KING, 0x1000000000000000ULL}),
+    ::testing::Values(PieceBoardCase{Color::WHITE, PieceType::PAWN,
+                                     uint64_t{0x000000000000FF00}},
+                      PieceBoardCase{Color::BLACK, PieceType::PAWN,
+                                     uint64_t{0x00FF000000000000}},
+                      PieceBoardCase{Color::WHITE, PieceType::ROOK,
+                                     uint64_t{0x0000000000000081}},
+                      PieceBoardCase{Color::BLACK, PieceType::ROOK,
+                                     uint64_t{0x8100000000000000}},
+                      PieceBoardCase{Color::WHITE, PieceType::KNIGHT,
+                                     uint64_t{0x0000000000000042}},
+                      PieceBoardCase{Color::WHITE, PieceType::BISHOP,
+                                     uint64_t{0x0000000000000024}},
+                      PieceBoardCase{Color::WHITE, PieceType::QUEEN,
+                                     uint64_t{0x0000000000000008}},
+                      PieceBoardCase{Color::WHITE, PieceType::KING,
+                                     uint64_t{0x0000000000000010}},
+                      PieceBoardCase{Color::BLACK, PieceType::KING,
+                                     uint64_t{0x1000000000000000}}),
     nameStartPosPieceBoardCase);
 
 TEST_F(PositionTest, EmptyBoardAllZero) {
@@ -100,7 +108,7 @@ TEST_F(PositionTest, EmptyBoardAllZero) {
     for (int p = 0; p < 6; ++p) {
       EXPECT_EQ(
           pieceBoard(pos, static_cast<Color>(c), static_cast<PieceType>(p)),
-          0ULL)
+          uint64_t{0})
           << "color=" << c << " piece=" << p;
     }
   }
@@ -110,13 +118,13 @@ TEST_F(PositionTest, SparsePiecePlacement) {
   // White king e1, black king e8, white rook a1, black knight g6.
   Position pos("4k3/8/6n1/8/8/8/8/R3K3 w - - 0 1");
   EXPECT_EQ(pieceBoard(pos, Color::WHITE, PieceType::KING),
-            0x0000000000000010ULL);  // e1
+            uint64_t{0x0000000000000010});  // e1
   EXPECT_EQ(pieceBoard(pos, Color::BLACK, PieceType::KING),
-            0x1000000000000000ULL);  // e8
+            uint64_t{0x1000000000000000});  // e8
   EXPECT_EQ(pieceBoard(pos, Color::WHITE, PieceType::ROOK),
-            0x0000000000000001ULL);  // a1
+            uint64_t{0x0000000000000001});  // a1
   EXPECT_EQ(pieceBoard(pos, Color::BLACK, PieceType::KNIGHT),
-            0x0000400000000000ULL);  // g6
+            uint64_t{0x0000400000000000});  // g6
 }
 
 // --- Side to move (parameterized) ---
@@ -231,16 +239,16 @@ INSTANTIATE_TEST_SUITE_P(Counters, CountersTest,
 
 TEST_F(PositionTest, OccupancyMatchesStartPos) {
   Position pos(K_START_POS);
-  EXPECT_EQ(occupied(pos, Color::WHITE), 0x000000000000FFFFULL);
-  EXPECT_EQ(occupied(pos, Color::BLACK), 0xFFFF000000000000ULL);
-  EXPECT_EQ(occupiedAll(pos), 0xFFFF00000000FFFFULL);
+  EXPECT_EQ(occupied(pos, Color::WHITE), uint64_t{0x000000000000FFFF});
+  EXPECT_EQ(occupied(pos, Color::BLACK), uint64_t{0xFFFF000000000000});
+  EXPECT_EQ(occupiedAll(pos), uint64_t{0xFFFF00000000FFFF});
 }
 
 TEST_F(PositionTest, OccupancyEmptyBoard) {
   Position pos("8/8/8/8/8/8/8/8 w - - 0 1");
-  EXPECT_EQ(occupied(pos, Color::WHITE), 0ULL);
-  EXPECT_EQ(occupied(pos, Color::BLACK), 0ULL);
-  EXPECT_EQ(occupiedAll(pos), 0ULL);
+  EXPECT_EQ(occupied(pos, Color::WHITE), uint64_t{0});
+  EXPECT_EQ(occupied(pos, Color::BLACK), uint64_t{0});
+  EXPECT_EQ(occupiedAll(pos), uint64_t{0});
 }
 
 // --- toFEN round-trip (parameterized: one case per FEN variant) ---

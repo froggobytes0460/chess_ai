@@ -9,15 +9,15 @@
 
 namespace {
 
-constexpr BitBoard RANK_1 = 0x00000000000000FFULL;
-constexpr BitBoard RANK_2 = 0x000000000000FF00ULL;
-constexpr BitBoard RANK_7 = 0x00FF000000000000ULL;
-constexpr BitBoard RANK_8 = 0xFF00000000000000ULL;
+constexpr BitBoard RANK_1{0x00000000000000FF};
+constexpr BitBoard RANK_2{0x000000000000FF00};
+constexpr BitBoard RANK_7{0x00FF000000000000};
+constexpr BitBoard RANK_8{0xFF00000000000000};
 
 // Returns the bitboard of squares one rank ahead of `bb`, from `color`'s
 // perspective (toward the 8th rank for white, toward the 1st for black).
 constexpr auto shiftForward(BitBoard bb, Color color) -> BitBoard {
-  return color == Color::WHITE ? bb << 8 : bb >> 8;
+  return color == Color::WHITE ? bb << 8U : bb >> 8U;
 }
 
 constexpr auto promotionRank(Color color) -> BitBoard {

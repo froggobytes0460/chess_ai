@@ -69,7 +69,7 @@ auto getZobristKeysForEnPassant() -> const std::array<uint64_t, 8>& {
 }
 
 auto getZobristKeyForSideToMove() -> const uint64_t& {
-  if (key_side_to_move == 0ULL) {
+  if (key_side_to_move == uint64_t{0}) {
     initZobrist();
   }
   return key_side_to_move;

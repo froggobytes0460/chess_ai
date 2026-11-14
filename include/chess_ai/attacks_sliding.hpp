@@ -137,7 +137,7 @@ inline auto buildSlidingTable(Square sq, uint64_t magic,
   table.mask = slidingMask(sq, dirs);
   int bits = popCount(table.mask);
   table.shift = 64 - bits;
-  table.attacks.resize(1ULL << bits);
+  table.attacks.resize(uint64_t{1} << bits);
 
   BitBoard subset = 0;
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)

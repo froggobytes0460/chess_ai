@@ -7,17 +7,17 @@
 // Sets the square bit on a bitboard.
 constexpr void setBit(BitBoard& bb, Square sq) {
   // NOLINTNEXTLINE(clang-analyzer-core.BitwiseShift)
-  bb |= (1ULL << static_cast<unsigned>(sq));
+  bb |= (BitBoard{1} << static_cast<unsigned>(sq));
 }
 
 // Unsets the square bit on a bitboard.
 constexpr void unsetBit(BitBoard& bb, Square sq) {
-  bb &= ~(1ULL << static_cast<unsigned>(sq));
+  bb &= ~(BitBoard{1} << static_cast<unsigned>(sq));
 }
 
 // Gets the status of the bit on the bitboard.
 [[nodiscard]] constexpr auto getBit(BitBoard bb, Square sq) -> bool {
-  return ((bb >> static_cast<unsigned>(sq)) & 1ULL) != 0;
+  return ((bb >> static_cast<unsigned>(sq)) & BitBoard{1}) != 0;
 }
 
 // Count the active bits on the bitboard.

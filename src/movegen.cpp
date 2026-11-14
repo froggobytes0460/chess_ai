@@ -159,13 +159,16 @@ void generateSlidingMoves(const Position& position, MoveList& moves) {
     }
   }
 }
-}  // namespace
 
+// Generates all pseudo-legal pawn moves (pushes, double pushes, captures,
+// en passant, promotions) for the side to move, appending them to `moves`.
 void generatePawnMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
   genPawnPushes(position, color, moves);
   genPawnCaptures(position, color, moves);
 }
+
+}  // namespace
 
 void generatePseudoLegalMoves(const Position& position, MoveList& out) {
   generatePawnMoves(position, out);

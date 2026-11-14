@@ -6,8 +6,22 @@
 #include <chess_ai/movegen.hpp>
 #include <chess_ai/position.hpp>
 #include <chess_ai/types.hpp>
+#include <cstdint>
 
 namespace {
+
+struct CastlingOption {
+  CastlingRights right;
+  BitBoard must_be_empty;  // every square between king and rook
+  Square king_crosses;     // square the king passes over; must be unattacked
+  Square king_to;
+  MoveFlag flag;
+};
+
+struct CastlingSide {
+  Square king_from;
+  std::array<CastlingOption, 2> options;
+};
 
 constexpr BitBoard RANK_1{0x00000000000000FF};
 constexpr BitBoard RANK_2{0x000000000000FF00};
@@ -28,6 +42,62 @@ constexpr auto doublePushFromRank(Color color) -> BitBoard {
   return color == Color::WHITE ? RANK_2 : RANK_7;
 }
 
+// Indexed by `Color`.
+constexpr std::array<CastlingSide, 2> CASTLING = {
+    {
+        {
+            .king_from = Square::E1,
+            .options =
+                {
+                    {
+                        {
+                            .right = CastlingRights::WHITE_KINGSIDE,
+                            .must_be_empty = squareBitboard(Square::F1) |
+                                             squareBitboard(Square::G1),
+                            .king_crosses = Square::F1,
+                            .king_to = Square::G1,
+                            .flag = MoveFlag::CASTLE_KINGSIDE,
+                        },
+                        {
+                            .right = CastlingRights::WHITE_QUEENSIDE,
+                            .must_be_empty = squareBitboard(Square::B1) |
+                                             squareBitboard(Square::C1) |
+                                             squareBitboard(Square::D1),
+                            .king_crosses = Square::D1,
+                            .king_to = Square::C1,
+                            .flag = MoveFlag::CASTLE_QUEENSIDE,
+                        },
+                    },
+                },
+        },
+        {
+            .king_from = Square::E8,
+            .options =
+                {
+                    {
+                        {
+                            .right = CastlingRights::BLACK_KINGSIDE,
+                            .must_be_empty = squareBitboard(Square::F8) |
+                                             squareBitboard(Square::G8),
+                            .king_crosses = Square::F8,
+                            .king_to = Square::G8,
+                            .flag = MoveFlag::CASTLE_KINGSIDE,
+                        },
+                        {
+                            .right = CastlingRights::BLACK_QUEENSIDE,
+                            .must_be_empty = squareBitboard(Square::B8) |
+                                             squareBitboard(Square::C8) |
+                                             squareBitboard(Square::D8),
+                            .king_crosses = Square::D8,
+                            .king_to = Square::C8,
+                            .flag = MoveFlag::CASTLE_QUEENSIDE,
+                        },
+                    },
+                },
+        },
+    },
+};
+
 constexpr std::array<MoveFlag, 4> PROMOTION_FLAGS = {
     MoveFlag::PROMOTION_KNIGHT,
     MoveFlag::PROMOTION_BISHOP,
@@ -41,6 +111,31 @@ constexpr std::array<MoveFlag, 4> PROMOTION_CAPTURE_FLAGS = {
     MoveFlag::PROMOTION_CAPTURE_ROOK,
     MoveFlag::PROMOTION_CAPTURE_QUEEN,
 };
+
+auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
+  const BitBoard occ = position.occupiedAll();
+  const BitBoard queens = position.pieces(by, PieceType::QUEEN);
+  const Color defender = (by == Color::WHITE) ? Color::BLACK : Color::WHITE;
+
+  if ((pawnAttacks(defender, sq) & position.pieces(by, PieceType::PAWN)) != 0) {
+    return true;
+  }
+  if ((knightAttacks(sq) & position.pieces(by, PieceType::KNIGHT)) != 0) {
+    return true;
+  }
+  if ((kingAttacks(sq) & position.pieces(by, PieceType::KING)) != 0) {
+    return true;
+  }
+  if ((bishopAttacks(sq, occ) &
+       (position.pieces(by, PieceType::BISHOP) | queens)) != 0) {
+    return true;
+  }
+  if ((rookAttacks(sq, occ) &
+       (position.pieces(by, PieceType::ROOK) | queens)) != 0) {
+    return true;
+  }
+  return false;
+}
 
 void genPawnPushes(const Position& position, Color color, MoveList& moves) {
   BitBoard pawns = position.pieces(color, PieceType::PAWN);
@@ -168,6 +263,26 @@ void generatePawnMoves(const Position& position, MoveList& moves) {
   genPawnCaptures(position, color, moves);
 }
 
+void generateCastlingMoves(const Position& position, MoveList& moves) {
+  const Color us = position.sideToMove();
+  const Color them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
+  const CastlingSide& side = CASTLING[static_cast<size_t>(us)];
+  const uint8_t rights = position.castlingRightsBits();
+  const BitBoard occ = position.occupiedAll();
+
+  // No rights, or king in check: cannot castle.
+  if ((rights == 0) || isSquareAttacked(position, side.king_from, them)) {
+    return;
+  }
+
+  for (const CastlingOption& option : side.options) {
+    if ((rights & static_cast<uint8_t>(option.right)) != 0 &&
+        (occ & option.must_be_empty) == 0 &&
+        !isSquareAttacked(position, option.king_crosses, them)) {
+      moves.push(Move(side.king_from, option.king_to, option.flag));
+    }
+  }
+}
 }  // namespace
 
 void generatePseudoLegalMoves(const Position& position, MoveList& out) {
@@ -177,4 +292,5 @@ void generatePseudoLegalMoves(const Position& position, MoveList& out) {
   generateSlidingMoves<PieceType::ROOK, rookAttacks>(position, out);
   generateSlidingMoves<PieceType::QUEEN, queenAttacks>(position, out);
   generateLeapingMoves<PieceType::KING, kingAttacks>(position, out);
+  generateCastlingMoves(position, out);
 }

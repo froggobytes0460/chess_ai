@@ -45,4 +45,8 @@ constexpr auto popLSB(BitBoard& bb) -> Square {
   return lsb;
 }
 
+[[nodiscard]] constexpr auto squareBitboard(Square sq) -> BitBoard {
+  return BitBoard{1} << static_cast<unsigned>(sq);
+}
+
 #endif  // !BITOPS_HPP

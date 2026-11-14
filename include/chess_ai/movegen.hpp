@@ -12,4 +12,7 @@
 // for the side to move, appending them to `out`.
 void generatePseudoLegalMoves(const Position& position, MoveList& out);
 
+// Checks if a position is attacked by a color at a certain square.
+auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool;
+
 #endif  // !MOVEGEN_HPP

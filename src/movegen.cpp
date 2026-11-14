@@ -98,45 +98,6 @@ constexpr std::array<CastlingSide, 2> CASTLING = {
     },
 };
 
-constexpr std::array<MoveFlag, 4> PROMOTION_FLAGS = {
-    MoveFlag::PROMOTION_KNIGHT,
-    MoveFlag::PROMOTION_BISHOP,
-    MoveFlag::PROMOTION_ROOK,
-    MoveFlag::PROMOTION_QUEEN,
-};
-
-constexpr std::array<MoveFlag, 4> PROMOTION_CAPTURE_FLAGS = {
-    MoveFlag::PROMOTION_CAPTURE_KNIGHT,
-    MoveFlag::PROMOTION_CAPTURE_BISHOP,
-    MoveFlag::PROMOTION_CAPTURE_ROOK,
-    MoveFlag::PROMOTION_CAPTURE_QUEEN,
-};
-
-auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
-  const BitBoard occ = position.occupiedAll();
-  const BitBoard queens = position.pieces(by, PieceType::QUEEN);
-  const Color defender = (by == Color::WHITE) ? Color::BLACK : Color::WHITE;
-
-  if ((pawnAttacks(defender, sq) & position.pieces(by, PieceType::PAWN)) != 0) {
-    return true;
-  }
-  if ((knightAttacks(sq) & position.pieces(by, PieceType::KNIGHT)) != 0) {
-    return true;
-  }
-  if ((kingAttacks(sq) & position.pieces(by, PieceType::KING)) != 0) {
-    return true;
-  }
-  if ((bishopAttacks(sq, occ) &
-       (position.pieces(by, PieceType::BISHOP) | queens)) != 0) {
-    return true;
-  }
-  if ((rookAttacks(sq, occ) &
-       (position.pieces(by, PieceType::ROOK) | queens)) != 0) {
-    return true;
-  }
-  return false;
-}
-
 void genPawnPushes(const Position& position, Color color, MoveList& moves) {
   BitBoard pawns = position.pieces(color, PieceType::PAWN);
   BitBoard empty = ~position.occupiedAll();
@@ -154,7 +115,12 @@ void genPawnPushes(const Position& position, Color color, MoveList& moves) {
     Square to = getLSB(target);
 
     if ((target & promo_rank) != 0) {
-      for (MoveFlag flag : PROMOTION_FLAGS) {
+      for (auto flag : {
+               MoveFlag::PROMOTION_KNIGHT,
+               MoveFlag::PROMOTION_BISHOP,
+               MoveFlag::PROMOTION_ROOK,
+               MoveFlag::PROMOTION_QUEEN,
+           }) {
         moves.push(Move(from, to, flag));
       }
     } else {
@@ -189,7 +155,12 @@ void genPawnCaptures(const Position& position, Color color, MoveList& moves) {
       BitBoard to_bb = 0;
       setBit(to_bb, to);
       if ((to_bb & promo_rank) != 0) {
-        for (MoveFlag flag : PROMOTION_CAPTURE_FLAGS) {
+        for (auto flag : {
+                 MoveFlag::PROMOTION_CAPTURE_KNIGHT,
+                 MoveFlag::PROMOTION_CAPTURE_BISHOP,
+                 MoveFlag::PROMOTION_CAPTURE_ROOK,
+                 MoveFlag::PROMOTION_CAPTURE_QUEEN,
+             }) {
           moves.push(Move(from, to, flag));
         }
       } else {
@@ -293,4 +264,29 @@ void generatePseudoLegalMoves(const Position& position, MoveList& out) {
   generateSlidingMoves<PieceType::QUEEN, queenAttacks>(position, out);
   generateLeapingMoves<PieceType::KING, kingAttacks>(position, out);
   generateCastlingMoves(position, out);
+}
+
+auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
+  const BitBoard occ = position.occupiedAll();
+  const BitBoard queens = position.pieces(by, PieceType::QUEEN);
+  const Color defender = (by == Color::WHITE) ? Color::BLACK : Color::WHITE;
+
+  if ((pawnAttacks(defender, sq) & position.pieces(by, PieceType::PAWN)) != 0) {
+    return true;
+  }
+  if ((knightAttacks(sq) & position.pieces(by, PieceType::KNIGHT)) != 0) {
+    return true;
+  }
+  if ((kingAttacks(sq) & position.pieces(by, PieceType::KING)) != 0) {
+    return true;
+  }
+  if ((bishopAttacks(sq, occ) &
+       (position.pieces(by, PieceType::BISHOP) | queens)) != 0) {
+    return true;
+  }
+  if ((rookAttacks(sq, occ) &
+       (position.pieces(by, PieceType::ROOK) | queens)) != 0) {
+    return true;
+  }
+  return false;
 }

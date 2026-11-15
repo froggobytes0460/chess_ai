@@ -92,6 +92,11 @@ class Position {
     return half_move_clock_;
   }
 
+  // Returns the incrementally maintained Zobrist key.
+  [[nodiscard]] constexpr auto zobristKey() const -> uint64_t {
+    return zobrist_key_;
+  }
+
   [[nodiscard]] auto makeMove(Move move) -> MoveState;
 
   void undoMove(Move move, MoveState move_state);

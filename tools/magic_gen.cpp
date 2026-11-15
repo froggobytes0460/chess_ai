@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace {
-constexpr uint64_t RANDOM_SEED = 0X2B6A0D2EB7393D0F;
+constexpr uint64_t RANDOM_SEED{0X2B6A0D2EB7393D0F};
 
 auto rookMask(Square sq) -> BitBoard {
   BitBoard mask{};

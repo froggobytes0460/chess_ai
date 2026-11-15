@@ -127,7 +127,7 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
 
   for (;;) {
     // AND a couple random `uint64_t` to generate sparse bits
-    uint64_t magic = rng() & rng() & rng();
+    uint64_t magic{rng() & rng() & rng()};
     curr_epoch++;
 
     if (curr_epoch == 0) {
@@ -155,9 +155,9 @@ auto findMagic(int n, const std::vector<BitBoard>& occupancies,
 
 template <auto maskFn, auto attackSlowFn>
 auto findMagicForSquare(Square sq) -> uint64_t {
-  BitBoard mask = maskFn(sq);
+  BitBoard mask{maskFn(sq)};
   std::vector<BitBoard> subsets;
-  BitBoard subset = 0;
+  BitBoard subset{0};
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
   do {
     subsets.push_back(subset);
@@ -176,21 +176,21 @@ auto findMagicForSquare(Square sq) -> uint64_t {
 
 // NOLINTNEXTLINE(bugprone-exception-escape) offline tool, crash-on-oom is fine
 auto main() -> int {
-  std::cout << "constexpr std::array<uint64_t, 64> ROOK_MAGICS = {\n";
+  std::cout << "constexpr std::array<uint64_t, 64> ROOK_MAGICS{\n";
   for (int sq = 0; sq < 64; ++sq) {
-    uint64_t magic =
-        findMagicForSquare<rookMask, rookAttackSlow>(static_cast<Square>(sq));
+    uint64_t magic{
+        findMagicForSquare<rookMask, rookAttackSlow>(static_cast<Square>(sq))};
     std::cout << "    0x" << std::setfill('0') << std::setw(16) << std::hex
-              << std::uppercase << magic << "ULL,\n";
+              << std::uppercase << magic << ",\n";
   }
   std::cout << "};\n" << std::dec << std::nouppercase;
 
-  std::cout << "constexpr std::array<uint64_t, 64> BISHOP_MAGICS = {\n";
+  std::cout << "constexpr std::array<uint64_t, 64> BISHOP_MAGICS{\n";
   for (int sq = 0; sq < 64; ++sq) {
-    uint64_t magic = findMagicForSquare<bishopMask, bishopAttackSlow>(
-        static_cast<Square>(sq));
+    uint64_t magic{findMagicForSquare<bishopMask, bishopAttackSlow>(
+        static_cast<Square>(sq))};
     std::cout << "    0x" << std::setfill('0') << std::setw(16) << std::hex
-              << std::uppercase << magic << "ULL,\n";
+              << std::uppercase << magic << ",\n";
   }
   std::cout << "};\n" << std::dec << std::nouppercase;
   return 0;

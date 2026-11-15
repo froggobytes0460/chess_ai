@@ -8,7 +8,7 @@ namespace {
 
 // Builds a bitboard from a list of squares, for expected-value readability.
 auto bitboardOf(std::initializer_list<Square> squares) -> BitBoard {
-  BitBoard bb = 0;
+  BitBoard bb{0};
   for (Square sq : squares) {
     setBit(bb, sq);
   }

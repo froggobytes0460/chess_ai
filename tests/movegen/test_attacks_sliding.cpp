@@ -15,11 +15,11 @@ constexpr int RANDOM_OCCUPANCIES_PER_SQUARE = 1000;
 
 TEST(SlidingAttacksTest, RookMatchesBruteForceForRandomOccupancies) {
   // NOLINTNEXTLINE(bugprone-random-generator-seed)
-  std::mt19937_64 rng(0xC0FFEEULL);
+  std::mt19937_64 rng{uint64_t{0xC0FFEE}};
   for (int sq = 0; sq < 64; ++sq) {
     auto square = static_cast<Square>(sq);
     for (int i = 0; i < RANDOM_OCCUPANCIES_PER_SQUARE; ++i) {
-      BitBoard occupied = randomBitBoard(rng);
+      BitBoard occupied{randomBitBoard(rng)};
       EXPECT_EQ(rookAttacks(square, occupied),
                 detail::slidingAttacksSlow(square, occupied, detail::ROOK_DIRS))
           << "square=" << sq << " occupied=" << occupied;
@@ -29,11 +29,11 @@ TEST(SlidingAttacksTest, RookMatchesBruteForceForRandomOccupancies) {
 
 TEST(SlidingAttacksTest, BishopMatchesBruteForceForRandomOccupancies) {
   // NOLINTNEXTLINE(bugprone-random-generator-seed)
-  std::mt19937_64 rng(0xBEEFULL);
+  std::mt19937_64 rng{uint64_t{0xBEEF}};
   for (int sq = 0; sq < 64; ++sq) {
     auto square = static_cast<Square>(sq);
     for (int i = 0; i < RANDOM_OCCUPANCIES_PER_SQUARE; ++i) {
-      BitBoard occupied = randomBitBoard(rng);
+      BitBoard occupied{randomBitBoard(rng)};
       EXPECT_EQ(
           bishopAttacks(square, occupied),
           detail::slidingAttacksSlow(square, occupied, detail::BISHOP_DIRS))
@@ -44,14 +44,14 @@ TEST(SlidingAttacksTest, BishopMatchesBruteForceForRandomOccupancies) {
 
 TEST(SlidingAttacksTest, QueenIsUnionOfRookAndBishop) {
   // NOLINTNEXTLINE(bugprone-random-generator-seed)
-  std::mt19937_64 rng(0xFACEULL);
+  std::mt19937_64 rng{uint64_t{0xFACE}};
   for (int sq = 0; sq < 64; ++sq) {
     auto square = static_cast<Square>(sq);
     for (int i = 0; i < RANDOM_OCCUPANCIES_PER_SQUARE; ++i) {
-      BitBoard occupied = randomBitBoard(rng);
-      BitBoard expected =
+      BitBoard occupied{randomBitBoard(rng)};
+      BitBoard expected{
           detail::slidingAttacksSlow(square, occupied, detail::ROOK_DIRS) |
-          detail::slidingAttacksSlow(square, occupied, detail::BISHOP_DIRS);
+          detail::slidingAttacksSlow(square, occupied, detail::BISHOP_DIRS)};
       EXPECT_EQ(queenAttacks(square, occupied), expected)
           << "square=" << sq << " occupied=" << occupied;
     }

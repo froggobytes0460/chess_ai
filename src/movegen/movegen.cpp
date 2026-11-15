@@ -99,16 +99,16 @@ constexpr std::array<CastlingSide, 2> CASTLING = {
 };
 
 void genPawnPushes(const Position& position, Color color, MoveList& moves) {
-  BitBoard pawns = position.pieces(color, PieceType::PAWN);
-  BitBoard empty = ~position.occupiedAll();
-  BitBoard promo_rank = promotionRank(color);
+  BitBoard pawns{position.pieces(color, PieceType::PAWN)};
+  BitBoard empty{~position.occupiedAll()};
+  BitBoard promo_rank{promotionRank(color)};
 
-  BitBoard single_push_pawns = pawns;
+  BitBoard single_push_pawns{pawns};
   while (single_push_pawns != 0) {
     Square from = popLSB(single_push_pawns);
-    BitBoard from_bb = 0;
+    BitBoard from_bb{0};
     setBit(from_bb, from);
-    BitBoard target = shiftForward(from_bb, color) & empty;
+    BitBoard target{shiftForward(from_bb, color) & empty};
     if (target == 0) {
       continue;
     }
@@ -126,10 +126,10 @@ void genPawnPushes(const Position& position, Color color, MoveList& moves) {
     } else {
       moves.push(Move(from, to, MoveFlag::QUIET));
 
-      BitBoard start_rank_bb = 0;
+      BitBoard start_rank_bb{0};
       setBit(start_rank_bb, from);
       if ((start_rank_bb & doublePushFromRank(color)) != 0) {
-        BitBoard double_target = shiftForward(target, color) & empty;
+        BitBoard double_target{shiftForward(target, color) & empty};
         if (double_target != 0) {
           moves.push(Move(from, getLSB(double_target), MoveFlag::DOUBLE_PUSH));
         }
@@ -139,20 +139,20 @@ void genPawnPushes(const Position& position, Color color, MoveList& moves) {
 }
 
 void genPawnCaptures(const Position& position, Color color, MoveList& moves) {
-  BitBoard pawns = position.pieces(color, PieceType::PAWN);
+  BitBoard pawns{position.pieces(color, PieceType::PAWN)};
   Color enemy = color == Color::WHITE ? Color::BLACK : Color::WHITE;
-  BitBoard enemy_occupied = position.occupied(enemy);
-  BitBoard promo_rank = promotionRank(color);
+  BitBoard enemy_occupied{position.occupied(enemy)};
+  BitBoard promo_rank{promotionRank(color)};
   Square ep_square = position.enPassantSquare();
 
   while (pawns != 0) {
     Square from = popLSB(pawns);
-    BitBoard attacks = pawnAttacks(color, from);
+    BitBoard attacks{pawnAttacks(color, from)};
 
-    BitBoard captures = attacks & enemy_occupied;
+    BitBoard captures{attacks & enemy_occupied};
     while (captures != 0) {
       Square to = popLSB(captures);
-      BitBoard to_bb = 0;
+      BitBoard to_bb{0};
       setBit(to_bb, to);
       if ((to_bb & promo_rank) != 0) {
         for (auto flag : {
@@ -177,21 +177,21 @@ void genPawnCaptures(const Position& position, Color color, MoveList& moves) {
 template <PieceType type, auto attacksOf>
 void generateLeapingMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
-  BitBoard own_occupied = position.occupied(color);
+  BitBoard own_occupied{position.occupied(color)};
   Color enemy = color == Color::WHITE ? Color::BLACK : Color::WHITE;
-  BitBoard enemy_occupied = position.occupied(enemy);
+  BitBoard enemy_occupied{position.occupied(enemy)};
 
-  BitBoard pieces = position.pieces(color, type);
+  BitBoard pieces{position.pieces(color, type)};
   while (pieces != 0) {
     Square from = popLSB(pieces);
-    BitBoard targets = attacksOf(from) & ~own_occupied;
+    BitBoard targets{attacksOf(from) & ~own_occupied};
 
-    BitBoard quiet_moves = targets & ~enemy_occupied;
+    BitBoard quiet_moves{targets & ~enemy_occupied};
     while (quiet_moves != 0) {
       moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
     }
 
-    BitBoard captures = targets & enemy_occupied;
+    BitBoard captures{targets & enemy_occupied};
     while (captures != 0) {
       moves.push(Move(from, popLSB(captures), MoveFlag::CAPTURE));
     }
@@ -204,22 +204,22 @@ void generateLeapingMoves(const Position& position, MoveList& moves) {
 template <PieceType type, auto attacksOf>
 void generateSlidingMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
-  BitBoard own_occupied = position.occupied(color);
+  BitBoard own_occupied{position.occupied(color)};
   Color enemy = color == Color::WHITE ? Color::BLACK : Color::WHITE;
-  BitBoard enemy_occupied = position.occupied(enemy);
-  BitBoard occupied_all = position.occupiedAll();
+  BitBoard enemy_occupied{position.occupied(enemy)};
+  BitBoard occupied_all{position.occupiedAll()};
 
-  BitBoard pieces = position.pieces(color, type);
+  BitBoard pieces{position.pieces(color, type)};
   while (pieces != 0) {
     Square from = popLSB(pieces);
-    BitBoard targets = attacksOf(from, occupied_all) & ~own_occupied;
+    BitBoard targets{attacksOf(from, occupied_all) & ~own_occupied};
 
-    BitBoard quiet_moves = targets & ~enemy_occupied;
+    BitBoard quiet_moves{targets & ~enemy_occupied};
     while (quiet_moves != 0) {
       moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
     }
 
-    BitBoard captures = targets & enemy_occupied;
+    BitBoard captures{targets & enemy_occupied};
     while (captures != 0) {
       moves.push(Move(from, popLSB(captures), MoveFlag::CAPTURE));
     }
@@ -239,7 +239,7 @@ void generateCastlingMoves(const Position& position, MoveList& moves) {
   const Color them = opposite(us);
   const CastlingSide& side = CASTLING[static_cast<size_t>(us)];
   const uint8_t rights = position.castlingRightsBits();
-  const BitBoard occ = position.occupiedAll();
+  const BitBoard occ{position.occupiedAll()};
 
   // No rights, or king in check: cannot castle.
   if ((rights == 0) || isSquareAttacked(position, side.king_from, them)) {
@@ -267,8 +267,8 @@ void generatePseudoLegalMoves(const Position& position, MoveList& out) {
 }
 
 auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
-  const BitBoard occ = position.occupiedAll();
-  const BitBoard queens = position.pieces(by, PieceType::QUEEN);
+  const BitBoard occ{position.occupiedAll()};
+  const BitBoard queens{position.pieces(by, PieceType::QUEEN)};
   const Color defender = opposite(by);
 
   if ((pawnAttacks(defender, sq) & position.pieces(by, PieceType::PAWN)) != 0) {
@@ -292,7 +292,7 @@ auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
 }
 
 auto inCheck(const Position& position, Color color) -> bool {
-  const BitBoard king_bitboard = position.pieces(color, PieceType::KING);
+  const BitBoard king_bitboard{position.pieces(color, PieceType::KING)};
   const Square king_sq = getLSB(king_bitboard);
 
   return isSquareAttacked(position, king_sq, opposite(color));

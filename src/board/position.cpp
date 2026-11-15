@@ -34,7 +34,7 @@ auto Position::computeZobristKey() const -> uint64_t {
       getZobristKeysForPieces();
   for (unsigned color = 0; color < 2; ++color) {
     for (unsigned piece = 0; piece < 6; ++piece) {
-      BitBoard bb = pieces_[color][piece];
+      BitBoard bb{pieces_[color][piece]};
       while (bb != 0) {
         auto sq = static_cast<unsigned>(popLSB(bb));
         key ^= piece_keys[color][piece][sq];
@@ -96,7 +96,7 @@ void Position::movePiece(Square from, Square to) {
   const auto col = static_cast<unsigned>(colorOf(piece));
   const auto pt = static_cast<unsigned>(typeOf(piece));
 
-  const BitBoard mask = squareBitboard(from) | squareBitboard(to);
+  const BitBoard mask{squareBitboard(from) | squareBitboard(to)};
 
   pieces_[col][pt] ^= mask;
   occupied_[col] ^= mask;

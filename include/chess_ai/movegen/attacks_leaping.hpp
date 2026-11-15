@@ -12,7 +12,7 @@ namespace detail {
 constexpr auto computeAttacks(int square,
                               const std::array<std::pair<int, int>, 8>& deltas)
     -> BitBoard {
-  BitBoard attacks = 0;
+  BitBoard attacks{0};
   int file = square % 8;
   int rank = square / 8;
   for (const auto& [delta_file, delta_rank] : deltas) {
@@ -55,7 +55,7 @@ constexpr std::array<std::pair<int, int>, 2> BLACK_PAWN_ATTACK_DELTAS = {
 
 constexpr auto computePawnAttacks(
     int square, const std::array<std::pair<int, int>, 2>& deltas) -> BitBoard {
-  BitBoard attacks = 0;
+  BitBoard attacks{0};
   int file = square % 8;
   int rank = square / 8;
   for (const auto& [delta_file, delta_rank] : deltas) {

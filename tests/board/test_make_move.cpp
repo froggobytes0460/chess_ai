@@ -49,7 +49,7 @@ TEST_P(MakeMoveTest, MakeKeepsZobristKeyInSync) {
 TEST_P(MakeMoveTest, UndoRestoresOriginalPosition) {
   const MakeMoveCase& param = GetParam();
   Position pos(param.fen);
-  const uint64_t key_before = pos.zobristKey();
+  const uint64_t key_before{pos.zobristKey()};
 
   const MoveState state = pos.makeMove(param.move);
   pos.undoMove(param.move, state);
@@ -169,7 +169,7 @@ class MakeUndoRoundTripTest : public testing::TestWithParam<std::string_view> {
 TEST_P(MakeUndoRoundTripTest, AllPseudoLegalMovesRoundTrip) {
   const std::string fen(GetParam());
   Position pos(fen);
-  const uint64_t key_before = pos.zobristKey();
+  const uint64_t key_before{pos.zobristKey()};
 
   MoveList moves;
   generatePseudoLegalMoves(pos, moves);

@@ -116,4 +116,9 @@ enum class CastlingRights : uint8_t {
   return static_cast<PieceType>((static_cast<uint8_t>(piece) - 1) % 6);
 }
 
+// Returns the other player.
+[[nodiscard]] constexpr auto opposite(Color color) -> Color {
+  return color == Color::WHITE ? Color::BLACK : Color::WHITE;
+}
+
 #endif  // !TYPES_HPP

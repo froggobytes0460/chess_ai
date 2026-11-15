@@ -236,7 +236,7 @@ void generatePawnMoves(const Position& position, MoveList& moves) {
 
 void generateCastlingMoves(const Position& position, MoveList& moves) {
   const Color us = position.sideToMove();
-  const Color them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
+  const Color them = opposite(us);
   const CastlingSide& side = CASTLING[static_cast<size_t>(us)];
   const uint8_t rights = position.castlingRightsBits();
   const BitBoard occ = position.occupiedAll();
@@ -269,7 +269,7 @@ void generatePseudoLegalMoves(const Position& position, MoveList& out) {
 auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
   const BitBoard occ = position.occupiedAll();
   const BitBoard queens = position.pieces(by, PieceType::QUEEN);
-  const Color defender = (by == Color::WHITE) ? Color::BLACK : Color::WHITE;
+  const Color defender = opposite(by);
 
   if ((pawnAttacks(defender, sq) & position.pieces(by, PieceType::PAWN)) != 0) {
     return true;

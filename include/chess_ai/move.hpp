@@ -1,6 +1,7 @@
 #ifndef MOVE_HPP
 #define MOVE_HPP
 
+#include <array>
 #include <chess_ai/types.hpp>
 #include <cstdint>
 
@@ -35,6 +36,15 @@ class Move {
   static constexpr uint16_t TO_SHIFT = 6;
   static constexpr uint16_t FLAG_SHIFT = 12;
 
+  // Low two flag bits of a promotion select the piece, in this order.
+  static constexpr uint8_t PROMOTION_TYPE_MASK = 0b11;
+  static constexpr std::array<PieceType, 4> PROMOTION_TYPES{
+      PieceType::KNIGHT,
+      PieceType::BISHOP,
+      PieceType::ROOK,
+      PieceType::QUEEN,
+  };
+
  public:
   constexpr Move() : bits_(0) {}
 
@@ -65,6 +75,16 @@ class Move {
   [[nodiscard]] constexpr auto isPromotion() const -> bool {
     return (static_cast<uint8_t>(flag()) &
             static_cast<uint8_t>(MoveFlag::PROMOTION_KNIGHT)) != 0;
+  }
+
+  [[nodiscard]] constexpr auto isCastle() const -> bool {
+    return flag() == MoveFlag::CASTLE_KINGSIDE ||
+           flag() == MoveFlag::CASTLE_QUEENSIDE;
+  }
+
+  // Returns the piece type a pawn promotes to. Only valid if `isPromotion()`.
+  [[nodiscard]] constexpr auto promotionType() const -> PieceType {
+    return PROMOTION_TYPES[static_cast<uint8_t>(flag()) & PROMOTION_TYPE_MASK];
   }
 
   [[nodiscard]] constexpr auto raw() const -> uint16_t { return bits_; }

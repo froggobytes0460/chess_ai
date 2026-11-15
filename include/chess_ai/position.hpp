@@ -2,10 +2,22 @@
 #define POSITION_HPP
 
 #include <array>
+#include <chess_ai/move.hpp>
 #include <chess_ai/types.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <string_view>
+
+// State destroyed by `Position::makeMove`, needed by `Position::undoMove` to
+// restore the previous position.
+struct MoveState {
+  uint64_t zobrist_key;
+  uint16_t half_move_clock;
+  uint8_t castling_rights_bits;
+  Square en_passant;
+  Piece captured;  // `Piece::NONE` if the move was not a capture
+};
 
 class Position {
  private:
@@ -20,11 +32,19 @@ class Position {
   Color side_to_move_;
   Square en_passant_;
 
+  void putPiece(Piece piece, Square sq);
+  void removePiece(Square sq);
+  void movePiece(Square from, Square to);
+
+  // Setters that keep `zobrist_key_` in sync with the changed field.
+  void setEnPassant(Square sq);
+  void setCastlingRights(uint8_t rights);
+
  public:
   Position();
   explicit Position(std::string_view fen);
 
-  [[nodiscard]] auto toFEN() -> std::string;
+  [[nodiscard]] auto toFEN() const -> std::string;
   [[nodiscard]] auto computeZobristKey() const -> uint64_t;
 
   // Returns the bitboard of pieces of `type` belonging to `color`.
@@ -71,6 +91,10 @@ class Position {
   [[nodiscard]] constexpr auto halfMoveClock() const -> uint16_t {
     return half_move_clock_;
   }
+
+  [[nodiscard]] auto makeMove(Move move) -> MoveState;
+
+  void undoMove(Move move, MoveState move_state);
 };
 
 #endif  // !POSITION_HPP

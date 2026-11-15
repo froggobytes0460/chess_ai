@@ -86,7 +86,7 @@ void appendPiecePlacement(const std::array<std::array<BitBoard, 6>, 2>& pieces,
 }
 }  // namespace
 
-auto Position::toFEN() -> std::string {
+auto Position::toFEN() const -> std::string {
   std::string fen;
   fen.reserve(90);
 

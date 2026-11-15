@@ -1,9 +1,9 @@
-#ifndef ATTACKS_SLIDING_HPP
-#define ATTACKS_SLIDING_HPP
+#ifndef CHESS_AI_MOVEGEN_ATTACKS_SLIDING_HPP
+#define CHESS_AI_MOVEGEN_ATTACKS_SLIDING_HPP
 
 #include <array>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -203,4 +203,4 @@ const std::array<detail::SlidingTable, 64> bishop_tables =
   return rookAttacks(sq, occupied) | bishopAttacks(sq, occupied);
 }
 
-#endif  // !ATTACKS_SLIDING_HPP
+#endif  // !CHESS_AI_MOVEGEN_ATTACKS_SLIDING_HPP

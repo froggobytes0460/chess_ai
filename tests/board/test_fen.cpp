@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <chess_ai/position.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/board/position.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstdint>
 #include <string>
 #include <tuple>

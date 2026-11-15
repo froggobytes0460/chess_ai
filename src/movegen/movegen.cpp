@@ -1,11 +1,11 @@
 #include <array>
-#include <chess_ai/attacks.hpp>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/move.hpp>
-#include <chess_ai/move_list.hpp>
-#include <chess_ai/movegen.hpp>
-#include <chess_ai/position.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/board/position.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/move.hpp>
+#include <chess_ai/core/move_list.hpp>
+#include <chess_ai/core/types.hpp>
+#include <chess_ai/movegen/attacks.hpp>
+#include <chess_ai/movegen/movegen.hpp>
 #include <cstdint>
 
 namespace {

@@ -1,10 +1,11 @@
 #include <array>
 #include <cassert>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/position.hpp>
-#include <chess_ai/types.hpp>
-#include <chess_ai/zobrist_key.hpp>
+#include <chess_ai/board/position.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstdint>
+
+#include "zobrist_key.hpp"
 
 namespace {
 auto enPassantKey(Square sq) -> uint64_t {

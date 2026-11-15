@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <chess_ai/move.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/move.hpp>
+#include <chess_ai/core/types.hpp>
 
 TEST(MoveTest, DefaultConstructedIsZero) {
   Move move;

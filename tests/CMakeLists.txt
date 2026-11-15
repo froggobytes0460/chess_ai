@@ -19,10 +19,17 @@ function(add_chess_test test_name test_source)
   gtest_discover_tests(${test_name})
 endfunction()
 
-add_chess_test(test_fen ./test_fen.cpp)
-add_chess_test(test_move ./test_move.cpp)
-add_chess_test(test_attacks ./test_attacks.cpp)
-add_chess_test(test_attacks_sliding ./test_attacks_sliding.cpp)
-add_chess_test(test_movegen ./test_movegen.cpp)
-add_chess_test(test_make_move ./test_make_move.cpp)
-add_chess_test(test_in_check ./test_in_check.cpp)
+# Test files mirror the engine modules: tests/<module>/test_*.cpp.
+
+# core
+add_chess_test(test_move ./core/test_move.cpp)
+
+# board
+add_chess_test(test_fen ./board/test_fen.cpp)
+add_chess_test(test_make_move ./board/test_make_move.cpp)
+
+# movegen
+add_chess_test(test_attacks ./movegen/test_attacks.cpp)
+add_chess_test(test_attacks_sliding ./movegen/test_attacks_sliding.cpp)
+add_chess_test(test_movegen ./movegen/test_movegen.cpp)
+add_chess_test(test_in_check ./movegen/test_in_check.cpp)

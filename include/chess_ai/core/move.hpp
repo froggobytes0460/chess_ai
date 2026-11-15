@@ -1,8 +1,8 @@
-#ifndef MOVE_HPP
-#define MOVE_HPP
+#ifndef CHESS_AI_CORE_MOVE_HPP
+#define CHESS_AI_CORE_MOVE_HPP
 
 #include <array>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstdint>
 
 // Move flags encoding special move semantics
@@ -97,4 +97,4 @@ class Move {
   }
 };
 
-#endif  // !MOVE_HPP
+#endif  // !CHESS_AI_CORE_MOVE_HPP

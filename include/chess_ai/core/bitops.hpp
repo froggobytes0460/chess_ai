@@ -1,8 +1,8 @@
-#ifndef BITOPS_HPP
-#define BITOPS_HPP
+#ifndef CHESS_AI_CORE_BITOPS_HPP
+#define CHESS_AI_CORE_BITOPS_HPP
 
 #include <bit>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/types.hpp>
 
 // Sets the square bit on a bitboard.
 constexpr void setBit(BitBoard& bb, Square sq) {
@@ -49,4 +49,4 @@ constexpr auto popLSB(BitBoard& bb) -> Square {
   return BitBoard{1} << static_cast<unsigned>(sq);
 }
 
-#endif  // !BITOPS_HPP
+#endif  // !CHESS_AI_CORE_BITOPS_HPP

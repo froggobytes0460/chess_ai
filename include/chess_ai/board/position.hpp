@@ -1,9 +1,9 @@
-#ifndef POSITION_HPP
-#define POSITION_HPP
+#ifndef CHESS_AI_BOARD_POSITION_HPP
+#define CHESS_AI_BOARD_POSITION_HPP
 
 #include <array>
-#include <chess_ai/move.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/move.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -102,4 +102,4 @@ class Position {
   void undoMove(Move move, MoveState move_state);
 };
 
-#endif  // !POSITION_HPP
+#endif  // !CHESS_AI_BOARD_POSITION_HPP

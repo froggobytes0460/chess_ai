@@ -1,7 +1,7 @@
 #include <array>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/position.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/board/position.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/types.hpp>
 #include <string>
 
 namespace {

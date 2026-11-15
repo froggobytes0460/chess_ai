@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <chess_ai/attacks_sliding.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/types.hpp>
+#include <chess_ai/movegen/attacks_sliding.hpp>
 #include <random>
 
 namespace {

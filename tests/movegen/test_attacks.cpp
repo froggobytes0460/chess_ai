@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <chess_ai/attacks.hpp>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/types.hpp>
+#include <chess_ai/movegen/attacks.hpp>
 
 namespace {
 

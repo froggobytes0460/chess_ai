@@ -1,6 +1,6 @@
-#include <chess_ai/move_list.hpp>
-#include <chess_ai/movegen.hpp>
-#include <chess_ai/perft.hpp>
+#include <chess_ai/core/move_list.hpp>
+#include <chess_ai/movegen/movegen.hpp>
+#include <chess_ai/perft/perft.hpp>
 #include <cstdint>
 #include <optional>
 

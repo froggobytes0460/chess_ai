@@ -1,8 +1,8 @@
-#ifndef MOVE_LIST_HPP
-#define MOVE_LIST_HPP
+#ifndef CHESS_AI_CORE_MOVE_LIST_HPP
+#define CHESS_AI_CORE_MOVE_LIST_HPP
 
 #include <array>
-#include <chess_ai/move.hpp>
+#include <chess_ai/core/move.hpp>
 #include <cstddef>
 
 // Fixed-size move container, no heap allocation. Capacity covers the
@@ -32,4 +32,4 @@ class MoveList {
   }
 };
 
-#endif  // !MOVE_LIST_HPP
+#endif  // !CHESS_AI_CORE_MOVE_LIST_HPP

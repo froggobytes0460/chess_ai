@@ -1,6 +1,6 @@
 #include <array>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>

@@ -1,5 +1,5 @@
-#ifndef TYPES_HPP
-#define TYPES_HPP
+#ifndef CHESS_AI_CORE_TYPES_HPP
+#define CHESS_AI_CORE_TYPES_HPP
 
 #include <cstdint>
 
@@ -121,4 +121,4 @@ enum class CastlingRights : uint8_t {
   return color == Color::WHITE ? Color::BLACK : Color::WHITE;
 }
 
-#endif  // !TYPES_HPP
+#endif  // !CHESS_AI_CORE_TYPES_HPP

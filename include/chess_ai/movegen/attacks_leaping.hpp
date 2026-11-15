@@ -1,9 +1,9 @@
-#ifndef ATTACKS_LEAPING_HPP
-#define ATTACKS_LEAPING_HPP
+#ifndef CHESS_AI_MOVEGEN_ATTACKS_LEAPING_HPP
+#define CHESS_AI_MOVEGEN_ATTACKS_LEAPING_HPP
 
 #include <array>
-#include <chess_ai/bitops.hpp>
-#include <chess_ai/types.hpp>
+#include <chess_ai/core/bitops.hpp>
+#include <chess_ai/core/types.hpp>
 
 namespace detail {
 
@@ -114,4 +114,4 @@ constexpr std::array<std::array<BitBoard, 64>, 2> PAWN_ATTACKS = {
   return PAWN_ATTACKS[static_cast<unsigned>(color)][static_cast<unsigned>(sq)];
 }
 
-#endif  // !ATTACKS_LEAPING_HPP
+#endif  // !CHESS_AI_MOVEGEN_ATTACKS_LEAPING_HPP

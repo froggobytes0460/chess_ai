@@ -1,5 +1,5 @@
-#ifndef ZOBRIST_KEY_HPP
-#define ZOBRIST_KEY_HPP
+#ifndef CHESS_AI_BOARD_ZOBRIST_KEY_HPP
+#define CHESS_AI_BOARD_ZOBRIST_KEY_HPP
 
 #include <array>
 #include <cstdint>
@@ -11,4 +11,4 @@ auto getZobristKeysForCastlingRights() -> const std::array<uint64_t, 16>&;
 auto getZobristKeysForEnPassant() -> const std::array<uint64_t, 8>&;
 auto getZobristKeyForSideToMove() -> const uint64_t&;
 
-#endif  // !ZOBRIST_KEY_HPP
+#endif  // !CHESS_AI_BOARD_ZOBRIST_KEY_HPP

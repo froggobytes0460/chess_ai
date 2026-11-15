@@ -1,6 +1,7 @@
+#include "zobrist_key.hpp"
+
 #include <algorithm>
 #include <array>
-#include <chess_ai/zobrist_key.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <random>

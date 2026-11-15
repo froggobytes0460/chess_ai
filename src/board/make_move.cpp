@@ -1,11 +1,12 @@
 #include <array>
-#include <chess_ai/move.hpp>
-#include <chess_ai/position.hpp>
-#include <chess_ai/types.hpp>
-#include <chess_ai/zobrist_key.hpp>
+#include <chess_ai/board/position.hpp>
+#include <chess_ai/core/move.hpp>
+#include <chess_ai/core/types.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
+
+#include "zobrist_key.hpp"
 
 namespace {
 // Castling rights kept when a piece moves from or to each square; ANDed with

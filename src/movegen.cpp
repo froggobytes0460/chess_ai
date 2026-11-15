@@ -290,3 +290,10 @@ auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {
   }
   return false;
 }
+
+auto inCheck(const Position& position, Color color) -> bool {
+  const BitBoard king_bitboard = position.pieces(color, PieceType::KING);
+  const Square king_sq = getLSB(king_bitboard);
+
+  return isSquareAttacked(position, king_sq, opposite(color));
+}

@@ -3,8 +3,7 @@
 #include <chess_ai/core/types.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <iomanip>
-#include <ios>
+#include <format>
 #include <iostream>
 #include <random>
 #include <utility>
@@ -178,20 +177,18 @@ auto findMagicForSquare(Square sq) -> uint64_t {
 auto main() -> int {
   std::cout << "constexpr std::array<uint64_t, 64> ROOK_MAGICS{\n";
   for (int sq = 0; sq < 64; ++sq) {
-    uint64_t magic{
-        findMagicForSquare<rookMask, rookAttackSlow>(static_cast<Square>(sq))};
-    std::cout << "    0x" << std::setfill('0') << std::setw(16) << std::hex
-              << std::uppercase << magic << ",\n";
+    uint64_t magic{findMagicForSquare<rookMask, rookAttackSlow>(
+        static_cast<Square>(sq))};  // NOLINT(readability-trailing-comma)
+    std::cout << std::format("    0x{:016X},\n", magic);
   }
-  std::cout << "};\n" << std::dec << std::nouppercase;
+  std::cout << "};\n";
 
   std::cout << "constexpr std::array<uint64_t, 64> BISHOP_MAGICS{\n";
   for (int sq = 0; sq < 64; ++sq) {
     uint64_t magic{findMagicForSquare<bishopMask, bishopAttackSlow>(
-        static_cast<Square>(sq))};
-    std::cout << "    0x" << std::setfill('0') << std::setw(16) << std::hex
-              << std::uppercase << magic << ",\n";
+        static_cast<Square>(sq))};  // NOLINT(readability-trailing-comma)
+    std::cout << std::format("    0x{:016X},\n", magic);
   }
-  std::cout << "};\n" << std::dec << std::nouppercase;
+  std::cout << "};\n";
   return 0;
 }

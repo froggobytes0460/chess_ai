@@ -198,7 +198,21 @@ constexpr detail::ScoreTable MG_TABLE{
 constexpr detail::ScoreTable EG_TABLE{
     detail::buildScoreTable(detail::EG_VALUE, detail::EG_PST),
 };
+
+// Game-phase weight of each piece type, indexed by `PieceType`. Starting
+// material sums to `MAX_PHASE` (pure middlegame); bare kings and pawns sum to 0
+// (pure endgame).
+constexpr std::array<int32_t, 6> PHASE_WEIGHT{0, 4, 2, 1, 1, 0};
 }  // namespace
+
+// Game phase of the starting position. Can be exceeded after promotions, so
+// callers clamp to it.
+constexpr int32_t MAX_PHASE{24};
+
+// Returns the game-phase weight of one piece of `type`.
+[[nodiscard]] constexpr auto phaseWeight(PieceType type) -> int32_t {
+  return PHASE_WEIGHT[static_cast<size_t>(type)];
+}
 
 // Returns the middlegame material + piece-square score of `color`'s `type` on
 // `sq`, from that color's point of view.

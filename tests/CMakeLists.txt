@@ -33,4 +33,9 @@ add_chess_test(test_attacks ./movegen/test_attacks.cpp)
 add_chess_test(test_attacks_sliding ./movegen/test_attacks_sliding.cpp)
 add_chess_test(test_movegen ./movegen/test_movegen.cpp)
 add_chess_test(test_in_check ./movegen/test_in_check.cpp)
+
+# perft
 add_chess_test(test_perft ./perft/test_perft.cpp)
+
+# eval
+add_chess_test(test_eval ./eval/test_eval.cpp)

@@ -163,7 +163,7 @@ auto parseU16(std::string_view field) -> uint16_t {
 
 // Returns the next whitespace-delimited field, advancing `rest` past it.
 auto nextField(std::string_view& rest) -> std::string_view {
-  std::size_t end = rest.find(' ');
+  size_t end = rest.find(' ');
   std::string_view field = rest.substr(0, end);
   rest = (end == std::string_view::npos) ? std::string_view{}
                                          : rest.substr(end + 1);

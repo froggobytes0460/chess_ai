@@ -39,3 +39,6 @@ add_chess_test(test_perft ./perft/test_perft.cpp)
 
 # eval
 add_chess_test(test_eval ./eval/test_eval.cpp)
+
+# search
+add_chess_test(test_search ./search/test_search.cpp)

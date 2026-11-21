@@ -31,7 +31,7 @@ class MakeMoveTest : public testing::TestWithParam<MakeMoveCase> {};
 TEST_P(MakeMoveTest, MakeProducesExpectedPosition) {
   const MakeMoveCase& param = GetParam();
   Position pos(param.fen);
-  [[maybe_unused]] const MoveState state = pos.makeMove(param.move);
+  static_cast<void>(pos.makeMove(param.move));
 
   EXPECT_EQ(pos.toFEN(), param.expected);
 }
@@ -40,7 +40,7 @@ TEST_P(MakeMoveTest, MakeProducesExpectedPosition) {
 TEST_P(MakeMoveTest, MakeKeepsZobristKeyInSync) {
   const MakeMoveCase& param = GetParam();
   Position pos(param.fen);
-  [[maybe_unused]] const MoveState state = pos.makeMove(param.move);
+  static_cast<void>(pos.makeMove(param.move));
 
   EXPECT_EQ(pos.zobristKey(), pos.computeZobristKey());
   EXPECT_EQ(pos.zobristKey(), Position(param.expected).zobristKey());

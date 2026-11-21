@@ -104,6 +104,8 @@ class Position {
   void undoMove(Move move, MoveState move_state);
 
   [[nodiscard]] auto isRepetition() const -> bool;
+
+  [[nodiscard]] auto isInsufficientMaterial() const -> bool;
 };
 
 #endif  // !CHESS_AI_BOARD_POSITION_HPP

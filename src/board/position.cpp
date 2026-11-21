@@ -13,6 +13,12 @@ namespace {
 auto enPassantKey(Square sq) -> uint64_t {
   return getZobristKeysForEnPassant()[static_cast<unsigned>(sq) % 8];
 }
+
+auto getAllPiecesForType(const std::array<std::array<BitBoard, 6>, 2>& pieces,
+                         PieceType pt) -> BitBoard {
+  return pieces[static_cast<size_t>(Color::WHITE)][static_cast<size_t>(pt)] |
+         pieces[static_cast<size_t>(Color::BLACK)][static_cast<size_t>(pt)];
+}
 }  // namespace
 
 Position::Position()
@@ -134,4 +140,14 @@ auto Position::isRepetition() const -> bool {
   const size_t n = std::min<size_t>(half_move_clock_, history_count_);
   const auto* const end = history_.data() + history_count_;
   return std::find(end - n, end, zobrist_key_) != end;
+}
+
+auto Position::isInsufficientMaterial() const -> bool {
+  if ((getAllPiecesForType(pieces_, PieceType::QUEEN) |
+       getAllPiecesForType(pieces_, PieceType::ROOK) |
+       getAllPiecesForType(pieces_, PieceType::PAWN)) != 0) {
+    return false;
+  }
+  return popCount(getAllPiecesForType(pieces_, PieceType::KNIGHT) |
+                  getAllPiecesForType(pieces_, PieceType::BISHOP)) <= 1;
 }

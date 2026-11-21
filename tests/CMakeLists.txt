@@ -28,6 +28,8 @@ add_chess_test(test_move ./core/test_move.cpp)
 add_chess_test(test_fen ./board/test_fen.cpp)
 add_chess_test(test_make_move ./board/test_make_move.cpp)
 add_chess_test(test_repetition ./board/test_repetition.cpp)
+add_chess_test(test_insufficient_material
+               ./board/test_insufficient_material.cpp)
 
 # movegen
 add_chess_test(test_attacks ./movegen/test_attacks.cpp)

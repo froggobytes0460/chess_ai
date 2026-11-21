@@ -15,6 +15,10 @@ constexpr int32_t MATE{31000};
 auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
              uint64_t& nodes) -> int32_t {
   nodes++;
+  if (pos.isRepetition() || pos.isInsufficientMaterial() ||
+      pos.halfMoveClock() >= 100) {
+    return 0;
+  }
   if (depth == 0) {
     return evaluate(pos);
   }

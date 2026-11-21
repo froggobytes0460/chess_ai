@@ -97,4 +97,22 @@ INSTANTIATE_TEST_SUITE_P(
             .fen = "8/8/8/8/8/8/p1K5/k1N5 b - - 0 1",
             .expected_score = 0,
             .depth = 2,
-        }));
+        },
+        // Queen up, but no capture or pawn move resets the clock: every
+        // child is a 50-move draw.
+        SearchCase{
+            .name = "FiftyMoveRuleDraw",
+            .fen = "4k3/8/8/8/8/8/8/3QK3 w - - 100 80",
+            .expected_score = 0,
+            .depth = 2,
+        },
+        // Knight up, but every child is KNvK: insufficient material.
+        SearchCase{
+            .name = "InsufficientMaterialDraw",
+            .fen = "8/8/2k5/6N1/8/4K3/8/8 w - - 0 1",
+            .expected_score = 0,
+            .depth = 2,
+        }),
+    [](const testing::TestParamInfo<SearchCase>& info) -> std::string {
+      return info.param.name;
+    });

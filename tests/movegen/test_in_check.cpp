@@ -18,7 +18,7 @@ struct InCheckCase {
 // NOLINTNEXTLINE(readability-identifier-naming) GoogleTest looks up this name.
 [[maybe_unused]] auto PrintTo(const InCheckCase& param, std::ostream* out)
     -> void {
-  *out << param.name << " [" << param.fen << "]";
+  *out << param.name << " [" << param.fen << ']';
 }
 }  // namespace
 

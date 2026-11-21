@@ -22,7 +22,7 @@ struct MakeMoveCase {
 // NOLINTNEXTLINE(readability-identifier-naming) GoogleTest looks up this name.
 [[maybe_unused]] auto PrintTo(const MakeMoveCase& param, std::ostream* out)
     -> void {
-  *out << param.name << " [" << param.fen << "]";
+  *out << param.name << " [" << param.fen << ']';
 }
 }  // namespace
 

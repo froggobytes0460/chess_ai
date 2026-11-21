@@ -29,7 +29,7 @@ struct MoveGenCase {
 // NOLINTNEXTLINE(readability-identifier-naming) GoogleTest looks up this name.
 [[maybe_unused]] auto PrintTo(const MoveGenCase& param, std::ostream* out)
     -> void {
-  *out << param.name << " [" << param.fen << "]";
+  *out << param.name << " [" << param.fen << ']';
 }
 
 auto contains(const MoveList& moves, const Move target) -> bool {

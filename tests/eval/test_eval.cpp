@@ -26,13 +26,13 @@ struct SymmetryCase {
 // NOLINTNEXTLINE(readability-identifier-naming) GoogleTest looks up this name.
 [[maybe_unused]] auto PrintTo(const EvalCase& param, std::ostream* out)
     -> void {
-  *out << param.name << " [" << param.fen << "]";
+  *out << param.name << " [" << param.fen << ']';
 }
 
 // NOLINTNEXTLINE(readability-identifier-naming) GoogleTest looks up this name.
 [[maybe_unused]] auto PrintTo(const SymmetryCase& param, std::ostream* out)
     -> void {
-  *out << param.name << " [" << param.fen << "]";
+  *out << param.name << " [" << param.fen << ']';
 }
 
 auto swapCase(char c) -> char {

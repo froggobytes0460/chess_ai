@@ -172,10 +172,12 @@ auto nextField(std::string_view& rest) -> std::string_view {
 }  // namespace
 
 Position::Position(std::string_view fen)
-    : pieces_{},  // NOLINT(readability-trailing-comma)
+    : history_{},
+      pieces_{},  // NOLINT(readability-trailing-comma)
       board_{},
       occupied_{},
       occupied_all_{},
+      history_count_{},
       full_move_counter_{},
       half_move_clock_{},
       castling_rights_bits_{},

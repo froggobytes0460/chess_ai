@@ -1,4 +1,5 @@
 #include <array>
+#include <cassert>
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/core/move.hpp>
 #include <chess_ai/core/types.hpp>
@@ -60,6 +61,9 @@ constexpr auto castlingRookMove(Move move) -> std::pair<Square, Square> {
 }  // namespace
 
 auto Position::makeMove(Move move) -> MoveState {
+  assert(history_count_ < history_.size());
+  history_[history_count_++] = zobrist_key_;
+
   const Color us = side_to_move_;
   const Square capture_sq = (move.flag() == MoveFlag::EN_PASSANT)
                                 ? enPassantCaptureSquare(move.to(), us)
@@ -114,6 +118,7 @@ auto Position::makeMove(Move move) -> MoveState {
 }
 
 void Position::undoMove(Move move, MoveState move_state) {
+  --history_count_;
   side_to_move_ = opposite(side_to_move_);
   Color us = side_to_move_;
   const Square capture_sq = (move.flag() == MoveFlag::EN_PASSANT)

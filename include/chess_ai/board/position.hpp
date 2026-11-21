@@ -21,11 +21,13 @@ struct MoveState {
 
 class Position {
  private:
+  std::array<uint64_t, 1024> history_;
   std::array<std::array<BitBoard, 6>, 2> pieces_;
   std::array<Piece, 64> board_;
   std::array<BitBoard, 2> occupied_;
   BitBoard occupied_all_;
   uint64_t zobrist_key_;
+  size_t history_count_;
   uint16_t full_move_counter_;
   uint16_t half_move_clock_;
   uint8_t castling_rights_bits_;
@@ -100,6 +102,8 @@ class Position {
   [[nodiscard]] auto makeMove(Move move) -> MoveState;
 
   void undoMove(Move move, MoveState move_state);
+
+  [[nodiscard]] auto isRepetition() const -> bool;
 };
 
 #endif  // !CHESS_AI_BOARD_POSITION_HPP

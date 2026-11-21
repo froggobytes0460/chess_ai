@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/core/bitops.hpp>
 #include <chess_ai/core/types.hpp>
+#include <cstddef>
 #include <cstdint>
 
 #include "zobrist_key.hpp"
@@ -14,10 +16,12 @@ auto enPassantKey(Square sq) -> uint64_t {
 }  // namespace
 
 Position::Position()
-    : pieces_{},  // NOLINT(readability-trailing-comma)
+    : history_{},
+      pieces_{},  // NOLINT(readability-trailing-comma)
       board_{},
       occupied_{},
       occupied_all_{},
+      history_count_{},
       full_move_counter_{},
       half_move_clock_{},
       castling_rights_bits_{},
@@ -124,4 +128,10 @@ void Position::setCastlingRights(uint8_t rights) {
   const std::array<uint64_t, 16>& keys = getZobristKeysForCastlingRights();
   zobrist_key_ ^= keys[castling_rights_bits_] ^ keys[rights];
   castling_rights_bits_ = rights;
+}
+
+auto Position::isRepetition() const -> bool {
+  const size_t n = std::min<size_t>(half_move_clock_, history_count_);
+  const auto* const end = history_.data() + history_count_;
+  return std::find(end - n, end, zobrist_key_) != end;
 }

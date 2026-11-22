@@ -2,6 +2,7 @@
 #define CHESS_AI_CORE_MOVE_LIST_HPP
 
 #include <array>
+#include <cassert>
 #include <chess_ai/core/move.hpp>
 #include <cstddef>
 
@@ -15,7 +16,10 @@ class MoveList {
   size_t count_ = 0;
 
  public:
-  constexpr void push(Move move) { moves_[count_++] = move; }
+  constexpr void push(Move move) {
+    assert(count_ < CAPACITY);
+    moves_[count_++] = move;
+  }
 
   [[nodiscard]] constexpr auto size() const -> size_t { return count_; }
 

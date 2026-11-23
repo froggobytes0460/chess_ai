@@ -10,6 +10,9 @@
 
 namespace {
 
+// Tells what type of move generation to do.
+enum class GenType : uint8_t { ALL, CAPTURES };
+
 struct CastlingOption {
   CastlingRights right;
   BitBoard must_be_empty;  // every square between king and rook
@@ -40,6 +43,11 @@ constexpr auto promotionRank(Color color) -> BitBoard {
 
 constexpr auto doublePushFromRank(Color color) -> BitBoard {
   return color == Color::WHITE ? RANK_2 : RANK_7;
+}
+
+// Rank from which a single push promotes.
+constexpr auto prePromotionRank(Color color) -> BitBoard {
+  return color == Color::WHITE ? RANK_7 : RANK_2;
 }
 
 // Indexed by `Color`.
@@ -98,12 +106,16 @@ constexpr std::array<CastlingSide, 2> CASTLING = {
     },
 };
 
+template <GenType gen>
 void genPawnPushes(const Position& position, Color color, MoveList& moves) {
   BitBoard pawns{position.pieces(color, PieceType::PAWN)};
   BitBoard empty{~position.occupiedAll()};
   BitBoard promo_rank{promotionRank(color)};
 
   BitBoard single_push_pawns{pawns};
+  if constexpr (gen == GenType::CAPTURES) {
+    single_push_pawns &= prePromotionRank(color);
+  }
   while (single_push_pawns != 0) {
     Square from = popLSB(single_push_pawns);
     BitBoard from_bb{0};
@@ -174,7 +186,7 @@ void genPawnCaptures(const Position& position, Color color, MoveList& moves) {
   }
 }
 
-template <PieceType type, auto attacksOf>
+template <PieceType type, auto attacksOf, GenType gen>
 void generateLeapingMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
   BitBoard own_occupied{position.occupied(color)};
@@ -186,9 +198,12 @@ void generateLeapingMoves(const Position& position, MoveList& moves) {
     Square from = popLSB(pieces);
     BitBoard targets{attacksOf(from) & ~own_occupied};
 
-    BitBoard quiet_moves{targets & ~enemy_occupied};
-    while (quiet_moves != 0) {
-      moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
+    if constexpr (gen == GenType::ALL) {
+      BitBoard quiet_moves{targets & ~enemy_occupied};
+
+      while (quiet_moves != 0) {
+        moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
+      }
     }
 
     BitBoard captures{targets & enemy_occupied};
@@ -201,7 +216,7 @@ void generateLeapingMoves(const Position& position, MoveList& moves) {
 // Same shape as `generateLeapingMoves`, but `attacksOf` additionally takes
 // the combined occupancy bitboard, since sliding-piece attacks depend on
 // blockers along the ray rather than a fixed per-square table.
-template <PieceType type, auto attacksOf>
+template <PieceType type, auto attacksOf, GenType gen>
 void generateSlidingMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
   BitBoard own_occupied{position.occupied(color)};
@@ -214,9 +229,12 @@ void generateSlidingMoves(const Position& position, MoveList& moves) {
     Square from = popLSB(pieces);
     BitBoard targets{attacksOf(from, occupied_all) & ~own_occupied};
 
-    BitBoard quiet_moves{targets & ~enemy_occupied};
-    while (quiet_moves != 0) {
-      moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
+    if constexpr (gen == GenType::ALL) {
+      BitBoard quiet_moves{targets & ~enemy_occupied};
+
+      while (quiet_moves != 0) {
+        moves.push(Move(from, popLSB(quiet_moves), MoveFlag::QUIET));
+      }
     }
 
     BitBoard captures{targets & enemy_occupied};
@@ -228,9 +246,11 @@ void generateSlidingMoves(const Position& position, MoveList& moves) {
 
 // Generates all pseudo-legal pawn moves (pushes, double pushes, captures,
 // en passant, promotions) for the side to move, appending them to `moves`.
+// In `GenType::CAPTURES` mode, pushes are limited to promotions.
+template <GenType gen>
 void generatePawnMoves(const Position& position, MoveList& moves) {
   Color color = position.sideToMove();
-  genPawnPushes(position, color, moves);
+  genPawnPushes<gen>(position, color, moves);
   genPawnCaptures(position, color, moves);
 }
 
@@ -254,16 +274,27 @@ void generateCastlingMoves(const Position& position, MoveList& moves) {
     }
   }
 }
+
+template <GenType gen>
+void generateMoves(const Position& position, MoveList& out) {
+  generatePawnMoves<gen>(position, out);
+  generateLeapingMoves<PieceType::KNIGHT, knightAttacks, gen>(position, out);
+  generateSlidingMoves<PieceType::BISHOP, bishopAttacks, gen>(position, out);
+  generateSlidingMoves<PieceType::ROOK, rookAttacks, gen>(position, out);
+  generateSlidingMoves<PieceType::QUEEN, queenAttacks, gen>(position, out);
+  generateLeapingMoves<PieceType::KING, kingAttacks, gen>(position, out);
+  if constexpr (gen == GenType::ALL) {
+    generateCastlingMoves(position, out);
+  }
+}
 }  // namespace
 
 void generatePseudoLegalMoves(const Position& position, MoveList& out) {
-  generatePawnMoves(position, out);
-  generateLeapingMoves<PieceType::KNIGHT, knightAttacks>(position, out);
-  generateSlidingMoves<PieceType::BISHOP, bishopAttacks>(position, out);
-  generateSlidingMoves<PieceType::ROOK, rookAttacks>(position, out);
-  generateSlidingMoves<PieceType::QUEEN, queenAttacks>(position, out);
-  generateLeapingMoves<PieceType::KING, kingAttacks>(position, out);
-  generateCastlingMoves(position, out);
+  generateMoves<GenType::ALL>(position, out);
+}
+
+void generateCaptureMoves(const Position& position, MoveList& out) {
+  generateMoves<GenType::CAPTURES>(position, out);
 }
 
 auto isSquareAttacked(const Position& position, Square sq, Color by) -> bool {

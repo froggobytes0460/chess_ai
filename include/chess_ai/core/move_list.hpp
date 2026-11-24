@@ -9,9 +9,10 @@
 // Fixed-size move container, no heap allocation. Capacity covers the
 // worst-case legal move count for any reachable chess position (218).
 class MoveList {
- private:
+ public:
   static constexpr size_t CAPACITY = 256;
 
+ private:
   std::array<Move, CAPACITY> moves_{};
   size_t count_ = 0;
 
@@ -32,6 +33,9 @@ class MoveList {
   }
 
   [[nodiscard]] constexpr auto operator[](size_t index) const -> Move {
+    return moves_[index];
+  }
+  [[nodiscard]] constexpr auto operator[](size_t index) -> Move& {
     return moves_[index];
   }
 };

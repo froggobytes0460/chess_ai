@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/core/move.hpp>
 #include <chess_ai/core/move_list.hpp>
@@ -7,6 +8,7 @@
 #include <chess_ai/eval/eval.hpp>
 #include <chess_ai/movegen/movegen.hpp>
 #include <chess_ai/search/search.hpp>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -17,6 +19,13 @@ constexpr int32_t MATE{31000};
 constexpr std::array<int32_t, 6> ORDER_VALUE{10, 9, 5, 3, 3, 1};
 constexpr int32_t PV_SCORE{1'000'000};
 constexpr int32_t PROMO_BONUS{10'000};
+
+struct SearchContext {
+  SearchLimits limits;
+  std::atomic<bool>* stop{};
+  uint64_t nodes{};
+  bool can_stop{false};
+};
 
 using ScoreList = std::array<int32_t, MoveList::CAPACITY>;
 
@@ -38,6 +47,18 @@ auto scoreMove(const Position& pos, Move move) -> int32_t {
   return score;
 }
 
+auto isStopped(const SearchContext& ctx) -> bool {
+  return ctx.can_stop && ctx.stop->load(std::memory_order_relaxed);
+}
+
+auto shouldStop(SearchContext& ctx) -> bool {
+  if ((ctx.nodes & 2047) == 0 &&
+      (ctx.nodes >= ctx.limits.nodes ||
+       std::chrono::steady_clock::now() >= ctx.limits.deadline)) {
+    ctx.stop->store(true, std::memory_order_relaxed);
+  }
+  return isStopped(ctx);
+}
 void scoreMoves(const Position& pos, const MoveList& move_list,
                 ScoreList& score_list, Move pv_move) {
   std::ranges::transform(
@@ -46,7 +67,7 @@ void scoreMoves(const Position& pos, const MoveList& move_list,
       });
 }
 void pickNext(MoveList& move_list, ScoreList& score_list, size_t i) {
-  // NOLINTBEGIN(readability-qualified-auto) Pointer issues
+  // NOLINTBEGIN(readability-qualified-auto) Pointer arithmetic typing issues
   const auto first = score_list.begin() + static_cast<ptrdiff_t>(i);
   const auto last =
       score_list.begin() + static_cast<ptrdiff_t>(move_list.size());
@@ -58,8 +79,11 @@ void pickNext(MoveList& move_list, ScoreList& score_list, size_t i) {
 }
 
 auto quiescence(Position& pos, int32_t alpha, int32_t beta, int ply,
-                uint64_t& nodes) -> int32_t {
-  ++nodes;
+                SearchContext& ctx) -> int32_t {
+  if (shouldStop(ctx)) {
+    return 0;
+  }
+  ++ctx.nodes;
   const int32_t stand_pat = evaluate(pos);
   if (stand_pat >= beta) {
     return stand_pat;
@@ -78,10 +102,16 @@ auto quiescence(Position& pos, int32_t alpha, int32_t beta, int ply,
     const MoveState state = pos.makeMove(move);
     if (inCheck(pos, opposite(pos.sideToMove()))) {
       pos.undoMove(move, state);
+      if (isStopped(ctx)) {
+        return 0;
+      }
       continue;
     }
-    const int32_t score = -quiescence(pos, -beta, -alpha, ply + 1, nodes);
+    const int32_t score = -quiescence(pos, -beta, -alpha, ply + 1, ctx);
     pos.undoMove(move, state);
+    if (isStopped(ctx)) {
+      return 0;
+    }
 
     best = std::max(score, best);
     alpha = std::max(score, alpha);
@@ -94,14 +124,17 @@ auto quiescence(Position& pos, int32_t alpha, int32_t beta, int ply,
 }
 
 auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
-             uint64_t& nodes) -> int32_t {
-  ++nodes;
+             SearchContext& ctx) -> int32_t {
+  if (shouldStop(ctx)) {
+    return 0;
+  }
+  ++ctx.nodes;
   if (pos.isRepetition() || pos.isInsufficientMaterial() ||
       pos.halfMoveClock() >= 100) {
     return 0;
   }
   if (depth == 0) {
-    return quiescence(pos, alpha, beta, ply, nodes);
+    return quiescence(pos, alpha, beta, ply, ctx);
   }
   int32_t best = -INF;
   bool legal_moves_left = false;
@@ -116,12 +149,18 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
     const MoveState state = pos.makeMove(move);
     if (inCheck(pos, opposite(pos.sideToMove()))) {
       pos.undoMove(move, state);
+      if (isStopped(ctx)) {
+        return 0;
+      }
       continue;
     }
     legal_moves_left = true;
-    const int32_t score =
-        -negamax(pos, depth - 1, -beta, -alpha, ply + 1, nodes);
+    const int32_t score = -negamax(pos, depth - 1, -beta, -alpha, ply + 1, ctx);
     pos.undoMove(move, state);
+    if (isStopped(ctx)) {
+      return 0;
+    }
+
     best = std::max(score, best);
     alpha = std::max(score, alpha);
     if (score >= beta) {
@@ -134,7 +173,7 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
   return best;
 }
 
-auto rootSearch(Position& pos, int depth, uint64_t& nodes, Move pv_move)
+auto rootSearch(Position& pos, int depth, Move pv_move, SearchContext& ctx)
     -> SearchResult {
   SearchResult result{.score = -INF, .depth = static_cast<int16_t>(depth)};
 
@@ -151,11 +190,17 @@ auto rootSearch(Position& pos, int depth, uint64_t& nodes, Move pv_move)
     const MoveState state = pos.makeMove(move);
     if (inCheck(pos, opposite(pos.sideToMove()))) {
       pos.undoMove(move, state);
+      if (isStopped(ctx)) {
+        return result;
+      }
       continue;
     }
     legal_moves_left = true;
-    const int32_t score = -negamax(pos, depth - 1, -INF, -alpha, 1, nodes);
+    const int32_t score = -negamax(pos, depth - 1, -INF, -alpha, 1, ctx);
     pos.undoMove(move, state);
+    if (isStopped(ctx)) {
+      return result;
+    }
     if (score > result.score) {
       result.score = score;
       result.best_move = move;
@@ -169,12 +214,18 @@ auto rootSearch(Position& pos, int depth, uint64_t& nodes, Move pv_move)
 }
 }  // namespace
 
-auto search(Position& pos, int max_depth) -> SearchResult {
+auto search(Position& pos, const SearchLimits& limits, std::atomic<bool>& stop)
+    -> SearchResult {
   SearchResult result{};
-  uint64_t nodes{};
-  for (int d = 1; d <= max_depth; ++d) {
-    result = rootSearch(pos, d, nodes, result.best_move);
-    result.nodes = nodes;
+  SearchContext ctx{.limits = limits, .stop = &stop};
+  for (int d = 1; d <= limits.depth; ++d) {
+    const SearchResult iter = rootSearch(pos, d, result.best_move, ctx);
+    if (isStopped(ctx)) {
+      break;
+    }
+    result = iter;
+    ctx.can_stop = true;
   }
+  result.nodes = ctx.nodes;
   return result;
 }

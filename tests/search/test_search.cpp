@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/core/move.hpp>
 #include <chess_ai/core/types.hpp>
@@ -60,7 +61,9 @@ class SearchTest : public testing::TestWithParam<SearchCase> {};
 TEST_P(SearchTest, SearchTest) {
   const SearchCase& param = GetParam();
   Position pos(param.fen);
-  SearchResult res = search(pos, static_cast<int>(param.depth));
+  std::atomic<bool> stop{false};
+  SearchResult res =
+      search(pos, {.depth = static_cast<int>(param.depth)}, stop);
 
   if (param.best_move.has_value()) {
     EXPECT_EQ(res.best_move, param.best_move);

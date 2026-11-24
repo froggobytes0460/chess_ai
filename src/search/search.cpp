@@ -12,15 +12,47 @@ namespace {
 constexpr int32_t INF{32000};
 constexpr int32_t MATE{31000};
 
+auto quiescence(Position& pos, int32_t alpha, int32_t beta, int ply,
+                uint64_t& nodes) -> int32_t {
+  ++nodes;
+  const int32_t stand_pat = evaluate(pos);
+  if (stand_pat >= beta) {
+    return stand_pat;
+  }
+  alpha = std::max(stand_pat, alpha);
+  int32_t best = stand_pat;
+
+  MoveList capture_moves;
+  generateCaptureMoves(pos, capture_moves);
+
+  for (const Move move : capture_moves) {
+    const MoveState state = pos.makeMove(move);
+    if (inCheck(pos, opposite(pos.sideToMove()))) {
+      pos.undoMove(move, state);
+      continue;
+    }
+    const int32_t score = -quiescence(pos, -beta, -alpha, ply + 1, nodes);
+    pos.undoMove(move, state);
+
+    best = std::max(score, best);
+    alpha = std::max(score, alpha);
+    if (score >= beta) {
+      break;
+    }
+  }
+
+  return best;
+}
+
 auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
              uint64_t& nodes) -> int32_t {
-  nodes++;
+  ++nodes;
   if (pos.isRepetition() || pos.isInsufficientMaterial() ||
       pos.halfMoveClock() >= 100) {
     return 0;
   }
   if (depth == 0) {
-    return evaluate(pos);
+    return quiescence(pos, alpha, beta, ply, nodes);
   }
   int32_t best = -INF;
   bool legal_moves_left = false;

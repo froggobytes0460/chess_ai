@@ -112,6 +112,22 @@ INSTANTIATE_TEST_SUITE_P(
             .fen = "8/8/2k5/6N1/8/4K3/8/8 w - - 0 1",
             .expected_score = 0,
             .depth = 2,
+        },
+        // Quiescence: Qxd5 wins a knight but exd5 loses the queen; only
+        // qsearch sees the recapture at depth 1. Rxa7 wins a pawn safely.
+        SearchCase{
+            .name = "QuiescenceAvoidsDefendedCapture",
+            .fen = "7k/p7/4p3/3n4/8/8/8/R2Q2K1 w - - 0 1",
+            .depth = 1,
+            .best_move = Move(Square::A1, Square::A7, MoveFlag::CAPTURE),
+        },
+        // Quiescence: Rxa6 wins a knight but leaves the queen to exd4; only
+        // qsearch sees the reply at depth 1. Qxe5 removes the attacker.
+        SearchCase{
+            .name = "QuiescenceSavesAttackedQueen",
+            .fen = "8/7k/n7/4p3/3Q4/8/8/R5K1 w - - 0 1",
+            .depth = 1,
+            .best_move = Move(Square::D4, Square::E5, MoveFlag::CAPTURE),
         }),
     [](const testing::TestParamInfo<SearchCase>& info) -> std::string {
       return info.param.name;

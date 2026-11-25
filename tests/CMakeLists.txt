@@ -47,3 +47,6 @@ add_chess_test(test_eval ./eval/test_eval.cpp)
 # search
 add_chess_test(test_search ./search/test_search.cpp)
 add_chess_test(test_search_limits ./search/test_search_limits.cpp)
+
+# uci
+add_chess_test(test_move_conv ./uci/test_move_conv.cpp)

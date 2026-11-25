@@ -1,6 +1,7 @@
+#include <chess_ai/uci/uci.hpp>
 #include <iostream>
 
 auto main() -> int {
-  std::cout << "Hello World!" << '\n';
+  uciLoop(std::cin, std::cout);
   return 0;
 }

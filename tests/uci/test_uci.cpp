@@ -4,6 +4,7 @@
 #include <chess_ai/uci/move_conv.hpp>
 #include <chess_ai/uci/uci.hpp>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <ostream>
 #include <sstream>
@@ -92,6 +93,28 @@ struct TimeCase {
 // NOLINTNEXTLINE(readability-identifier-naming) Google GTest uses this name
 [[maybe_unused]] void PrintTo(const TimeCase& param, std::ostream* out) {
   *out << param.name << " '" << param.position << "' '" << param.go << '\'';
+}
+
+// `bestmoves` is how many "bestmove " lines `script` must print.
+struct BestMoveCountCase {
+  const char* name{};
+  const char* script{};
+  size_t bestmoves{};
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming) Google GTest uses this name
+[[maybe_unused]] void PrintTo(const BestMoveCountCase& param,
+                              std::ostream* out) {
+  *out << param.name << " '" << param.script << '\'';
+}
+
+auto countOf(const std::string& output, std::string_view key) -> size_t {
+  size_t count{0};
+  for (size_t pos{output.find(key)}; pos != std::string::npos;
+       pos = output.find(key, pos + key.size())) {
+    ++count;
+  }
+  return count;
 }
 }  // namespace
 
@@ -261,6 +284,35 @@ INSTANTIATE_TEST_SUITE_P(
             .name = "NegativeClock",
             .script = "go wtime -100 btime -100\n",
             .fen = STARTPOS,
+        },
+        // Depth 1 always completes, so a stopped search still has a move.
+        LegalCase{
+            .name = "InfiniteThenStop",
+            .script = "position startpos moves e2e4\ngo infinite\nstop\n",
+            .fen = AFTER_E4,
+        },
+        LegalCase{
+            .name = "InfiniteThenQuit",
+            .script = "position startpos moves e2e4\ngo infinite\nquit\n",
+            .fen = AFTER_E4,
+        },
+        // EOF during `go infinite` must stop the search, not hang.
+        LegalCase{
+            .name = "InfiniteThenEof",
+            .script = "position startpos moves e2e4\ngo infinite\n",
+            .fen = AFTER_E4,
+        },
+        // Without `stop`, depth 12 would take far too long in debug.
+        LegalCase{
+            .name = "StopCutsDepthSearch",
+            .script = "position startpos moves e2e4\ngo depth 12\nstop\n",
+            .fen = AFTER_E4,
+        },
+        LegalCase{
+            .name = "GoStopsRunningSearch",
+            .script = "go infinite\nposition startpos moves e2e4\n"
+                      "go depth 1\n",
+            .fen = AFTER_E4,
         }),
     [](const testing::TestParamInfo<LegalCase>& info) -> std::string {
       return info.param.name;
@@ -322,3 +374,63 @@ INSTANTIATE_TEST_SUITE_P(
     [](const testing::TestParamInfo<TimeCase>& info) -> std::string {
       return info.param.name;
     });
+
+class UciBestMoveCountTest : public testing::TestWithParam<BestMoveCountCase> {
+};
+
+TEST_P(UciBestMoveCountTest, PrintsExpectedNumberOfBestMoves) {
+  const BestMoveCountCase& param = GetParam();
+  const std::string output{run(param.script)};
+  EXPECT_EQ(countOf(output, "bestmove "), param.bestmoves) << "output:\n"
+                                                           << output;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    BestMoveCounts, UciBestMoveCountTest,
+    testing::Values(
+        BestMoveCountCase{
+            .name = "InfiniteThenStop",
+            .script = "go infinite\nstop\n",
+            .bestmoves = 1,
+        },
+        BestMoveCountCase{
+            .name = "InfiniteThenEof",
+            .script = "go infinite\n",
+            .bestmoves = 1,
+        },
+        // `stop` after a finished search must not print a second move.
+        BestMoveCountCase{
+            .name = "StopAfterFinishedSearch",
+            .script = "go depth 1\nstop\n",
+            .bestmoves = 1,
+        },
+        BestMoveCountCase{
+            .name = "RepeatedStop",
+            .script = "go infinite\nstop\nstop\n",
+            .bestmoves = 1,
+        },
+        BestMoveCountCase{
+            .name = "StopWithoutSearch",
+            .script = "stop\n",
+            .bestmoves = 0,
+        },
+        // A new `go` ends the running search, which still reports its move.
+        BestMoveCountCase{
+            .name = "GoWhileInfinite",
+            .script = "go infinite\ngo depth 1\n",
+            .bestmoves = 2,
+        }),
+    [](const testing::TestParamInfo<BestMoveCountCase>& info) -> std::string {
+      return info.param.name;
+    });
+
+// UCI requires `readyok` at once while searching; during `go infinite` no
+// `bestmove` may come before `stop`.
+TEST(UciLoopTest, ReadyOkDuringInfiniteSearch) {
+  const std::string output{run("go infinite\nisready\nstop\n")};
+  const size_t ready{output.find("readyok")};
+  const size_t best{output.find("bestmove ")};
+  ASSERT_NE(ready, std::string::npos) << "output:\n" << output;
+  ASSERT_NE(best, std::string::npos) << "output:\n" << output;
+  EXPECT_LT(ready, best) << "output:\n" << output;
+}

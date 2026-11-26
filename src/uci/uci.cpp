@@ -16,16 +16,29 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <syncstream>
+#include <thread>
 
 namespace {
 constexpr std::string_view START_POS{
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"};
 constexpr int64_t MOVE_OVERHEAD_MS{50};
 constexpr int64_t DEFAULT_MOVES_TO_GO{30};
+
 struct Engine {
   Position pos{START_POS};
   std::atomic<bool> stop{false};
+  std::jthread worker;
+  bool infinite{false};
 };
+
+void stopEngine(Engine& eng) {
+  eng.stop = true;
+  eng.stop.notify_all();
+  if (eng.worker.joinable()) {
+    eng.worker.join();
+  }
+}
 
 void handlePosition(Engine& eng, std::istringstream& args) {
   std::string token;
@@ -69,6 +82,8 @@ void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
   int64_t movestogo{0};
   std::string token;
 
+  eng.infinite = false;
+
   while (args >> token) {
     if (token == "depth") {
       int d{};
@@ -91,6 +106,8 @@ void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
       args >> binc;
     } else if (token == "movestogo") {
       args >> movestogo;
+    } else if (token == "infinite") {
+      eng.infinite = true;
     }
   }
 
@@ -109,16 +126,22 @@ void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
     limits.deadline = start + std::chrono::milliseconds(budget);
   }
 
-  Position copy{eng.pos};
+  stopEngine(eng);
   eng.stop = false;
-  const SearchResult res{search(copy, limits, eng.stop)};
-
-  out << std::format("info depth {} score cp {} nodes {}\n", res.depth,
-                     res.score, res.nodes)
-      << std::format("bestmove {}", res.best_move == Move{}
-                                        ? "0000"
-                                        : moveToUci(res.best_move))
-      << std::endl;
+  eng.worker = std::jthread([&eng, &out, copy = eng.pos, limits,
+                             infinite = eng.infinite]() mutable -> void {
+    const SearchResult res{search(copy, limits, eng.stop)};
+    if (infinite) {
+      eng.stop.wait(false);
+    }
+    std::osyncstream sync{out};
+    sync << std::format("info depth {} score cp {} nodes {}\n", res.depth,
+                        res.score, res.nodes)
+         << std::format("bestmove {}", res.best_move == Move{}
+                                           ? "0000"
+                                           : moveToUci(res.best_move))
+         << std::endl;
+  });
 }
 }  // namespace
 
@@ -132,20 +155,27 @@ void uciLoop(std::istream& in_stream, std::ostream& out_stream) {
     args >> cmd;
 
     if (cmd == "uci") {
-      out_stream << "id name chess_ai\n"
-                 << "id author Yasir Atiq Mohammed\n"
-                 << "uciok" << std::endl;
+      std::osyncstream{out_stream} << "id name chess_ai\n"
+                                   << "id author Yasir Atiq Mohammed\n"
+                                   << "uciok" << std::endl;
     } else if (cmd == "isready") {
-      out_stream << "readyok" << std::endl;
+      std::osyncstream{out_stream} << "readyok" << std::endl;
     } else if (cmd == "ucinewgame") {
+      stopEngine(eng);
       eng.pos = Position{START_POS};
     } else if (cmd == "position") {
       handlePosition(eng, args);
     } else if (cmd == "go") {
       handleGo(eng, args, out_stream);
+    } else if (cmd == "stop") {
+      stopEngine(eng);
     } else if (cmd == "quit") {
+      stopEngine(eng);
       break;
     }
+  }
+  if (eng.infinite) {
+    stopEngine(eng);
   }
 }
 // NOLINTEND(performance-avoid-endl)

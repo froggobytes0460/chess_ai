@@ -4,6 +4,8 @@ project(ChessAI LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(Threads REQUIRED)
+
 option(generate_tests "Builds the project tests" OFF)
 option(build_tools "Builds extra tools (offline scripts)" OFF)
 
@@ -25,7 +27,10 @@ list(REMOVE_ITEM ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 add_library(chess_engine STATIC ${ENGINE_SOURCES})
 target_include_directories(chess_engine
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(chess_engine PUBLIC compiler_flags)
+target_link_libraries(
+  chess_engine
+  PUBLIC compiler_flags
+  PRIVATE Threads::Threads)
 
 add_executable(main src/main.cpp)
 target_link_libraries(main PRIVATE chess_engine compiler_flags)

@@ -133,6 +133,9 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
       pos.halfMoveClock() >= 100) {
     return 0;
   }
+  if (inCheck(pos, pos.sideToMove())) {
+    ++depth;
+  }
   if (depth == 0) {
     return quiescence(pos, alpha, beta, ply, ctx);
   }

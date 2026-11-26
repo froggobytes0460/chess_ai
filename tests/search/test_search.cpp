@@ -118,17 +118,21 @@ INSTANTIATE_TEST_SUITE_P(
         },
         // Quiescence: Qxd5 wins a knight but exd5 loses the queen; only
         // qsearch sees the recapture at depth 1. Rxa7 wins a pawn safely.
+        // Pawn shield and d5 knight leave White no checks, so the check
+        // extension cannot deepen the search.
         SearchCase{
             .name = "QuiescenceAvoidsDefendedCapture",
-            .fen = "7k/p7/4p3/3n4/8/8/8/R2Q2K1 w - - 0 1",
+            .fen = "6k1/p4ppp/4p3/3n4/8/8/8/R2Q2K1 w - - 0 1",
             .depth = 1,
             .best_move = Move(Square::A1, Square::A7, MoveFlag::CAPTURE),
         },
         // Quiescence: Rxa6 wins a knight but leaves the queen to exd4; only
         // qsearch sees the reply at depth 1. Qxe5 removes the attacker.
+        // Pawn shield and d5 pawn leave White no checks, so the check
+        // extension cannot deepen the search.
         SearchCase{
             .name = "QuiescenceSavesAttackedQueen",
-            .fen = "8/7k/n7/4p3/3Q4/8/8/R5K1 w - - 0 1",
+            .fen = "6k1/5ppp/n7/3Pp3/3Q4/8/8/R5K1 w - - 0 1",
             .depth = 1,
             .best_move = Move(Square::D4, Square::E5, MoveFlag::CAPTURE),
         }),

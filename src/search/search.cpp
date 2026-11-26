@@ -16,6 +16,8 @@
 namespace {
 constexpr int32_t INF{32000};
 constexpr int32_t MATE{31000};
+// Hard depth bound: check extensions can keep depth from shrinking.
+constexpr int MAX_PLY{128};
 constexpr std::array<int32_t, 6> ORDER_VALUE{10, 9, 5, 3, 3, 1};
 constexpr int32_t PV_SCORE{1'000'000};
 constexpr int32_t PROMO_BONUS{10'000};
@@ -84,6 +86,9 @@ auto quiescence(Position& pos, int32_t alpha, int32_t beta, int ply,
     return 0;
   }
   ++ctx.nodes;
+  if (ply >= MAX_PLY) {
+    return evaluate(pos);
+  }
   const int32_t stand_pat = evaluate(pos);
   if (stand_pat >= beta) {
     return stand_pat;
@@ -129,6 +134,9 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
     return 0;
   }
   ++ctx.nodes;
+  if (ply >= MAX_PLY) {
+    return evaluate(pos);
+  }
   if (pos.isRepetition() || pos.isInsufficientMaterial() ||
       pos.halfMoveClock() >= 100) {
     return 0;

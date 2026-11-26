@@ -3,6 +3,8 @@
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/uci/move_conv.hpp>
 #include <chess_ai/uci/uci.hpp>
+#include <chrono>
+#include <cstdint>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -71,6 +73,25 @@ struct LegalCase {
 // NOLINTNEXTLINE(readability-identifier-naming) Google GTest uses this name
 [[maybe_unused]] void PrintTo(const LegalCase& param, std::ostream* out) {
   *out << param.name << " '" << param.script << '\'';
+}
+
+// Each case gets a budget far below `MAX_ELAPSED_MS`; picking the wrong
+// clock (or none) instead gives a budget far above it.
+constexpr int64_t MAX_ELAPSED_MS{500};
+// Appended to every `go` so a broken time limit fails fast instead of
+// searching forever (~5 s in debug).
+constexpr const char* NODE_GUARD{" nodes 4000000\n"};
+
+// `go` is the go line without trailing newline; NODE_GUARD is appended.
+struct TimeCase {
+  const char* name{};
+  const char* position{};
+  const char* go{};
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming) Google GTest uses this name
+[[maybe_unused]] void PrintTo(const TimeCase& param, std::ostream* out) {
+  *out << param.name << " '" << param.position << "' '" << param.go << '\'';
 }
 }  // namespace
 
@@ -226,10 +247,78 @@ INSTANTIATE_TEST_SUITE_P(
             .fen = STARTPOS,
         },
         LegalCase{
-            .name = "IgnoresClockArguments",
+            .name = "ClockWithDepth",
             .script = "go wtime 1000 btime 1000 winc 0 binc 0 depth 1\n",
+            .fen = STARTPOS,
+        },
+        LegalCase{
+            .name = "BlackClock",
+            .script = "position startpos moves e2e4\n"
+                      "go wtime 1000 btime 1000\n",
+            .fen = AFTER_E4,
+        },
+        LegalCase{
+            .name = "NegativeClock",
+            .script = "go wtime -100 btime -100\n",
             .fen = STARTPOS,
         }),
     [](const testing::TestParamInfo<LegalCase>& info) -> std::string {
+      return info.param.name;
+    });
+
+class UciTimeTest : public testing::TestWithParam<TimeCase> {};
+
+TEST_P(UciTimeTest, ReturnsWithinBudget) {
+  const TimeCase& param = GetParam();
+  const std::string script =
+      std::string{param.position} + "\n" + param.go + NODE_GUARD;
+  const auto start = std::chrono::steady_clock::now();
+  const std::string output{run(script)};
+  const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now() - start);
+  EXPECT_FALSE(bestMove(output).empty()) << "output:\n" << output;
+  EXPECT_LT(elapsed.count(), MAX_ELAPSED_MS) << "output:\n" << output;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TimeBudgets, UciTimeTest,
+    testing::Values(
+        // Budget 1000 / 30 ms; black's clock would give ~33 s.
+        TimeCase{
+            .name = "UsesWhiteClock",
+            .position = "position startpos",
+            .go = "go wtime 1000 btime 1000000",
+        },
+        // Budget 1000 / 30 ms; white's clock would give ~33 s.
+        TimeCase{
+            .name = "UsesBlackClock",
+            .position = "position startpos moves e2e4",
+            .go = "go wtime 1000000 btime 1000",
+        },
+        // time - overhead < 0: budget clamps to 1 ms.
+        TimeCase{
+            .name = "NegativeClock",
+            .position = "position startpos",
+            .go = "go wtime -100 btime -100",
+        },
+        // 60 / 30 + 100000 / 2 ms capped to 60 - 50 = 10 ms.
+        TimeCase{
+            .name = "IncrementCappedByClock",
+            .position = "position startpos",
+            .go = "go wtime 60 btime 60 winc 100000 binc 100000",
+        },
+        // movetime wins over clock that would give ~33 s.
+        TimeCase{
+            .name = "MoveTimeOverridesClock",
+            .position = "position startpos",
+            .go = "go movetime 50 wtime 1000000 btime 1000000",
+        },
+        // Budget 30000 / 300 ms; default 30 moves would give 1 s.
+        TimeCase{
+            .name = "MovesToGo",
+            .position = "position startpos",
+            .go = "go wtime 30000 btime 30000 movestogo 300",
+        }),
+    [](const testing::TestParamInfo<TimeCase>& info) -> std::string {
       return info.param.name;
     });

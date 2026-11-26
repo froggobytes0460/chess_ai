@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/core/move.hpp>
+#include <chess_ai/core/types.hpp>
 #include <chess_ai/search/search.hpp>
 #include <chess_ai/uci/move_conv.hpp>
 #include <chess_ai/uci/uci.hpp>
@@ -19,7 +20,8 @@
 namespace {
 constexpr std::string_view START_POS{
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"};
-
+constexpr int64_t MOVE_OVERHEAD_MS{50};
+constexpr int64_t DEFAULT_MOVES_TO_GO{30};
 struct Engine {
   Position pos{START_POS};
   std::atomic<bool> stop{false};
@@ -59,6 +61,12 @@ void handlePosition(Engine& eng, std::istringstream& args) {
 }
 void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
   SearchLimits limits{};
+  std::optional<int64_t> wtime;
+  std::optional<int64_t> btime;
+  std::optional<int64_t> movetime;
+  int64_t winc{0};
+  int64_t binc{0};
+  int64_t movestogo{0};
   std::string token;
 
   while (args >> token) {
@@ -69,12 +77,36 @@ void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
     } else if (token == "nodes") {
       args >> limits.nodes;
     } else if (token == "movetime") {
-      int64_t ms{};
-      args >> ms;
-      limits.deadline =
-          std::chrono::steady_clock::now() + std::chrono::milliseconds{ms};
+      movetime.emplace();
+      args >> *movetime;
+    } else if (token == "wtime") {
+      wtime.emplace();
+      args >> *wtime;
+    } else if (token == "btime") {
+      btime.emplace();
+      args >> *btime;
+    } else if (token == "winc") {
+      args >> winc;
+    } else if (token == "binc") {
+      args >> binc;
+    } else if (token == "movestogo") {
+      args >> movestogo;
     }
-    // TODO: Implement wtime/btime/winc/binc/movestogo/infinite later.
+  }
+
+  const bool is_white{eng.pos.sideToMove() == Color::WHITE};
+  const std::optional<int64_t> time{is_white ? wtime : btime};
+  const int64_t inc{is_white ? winc : binc};
+
+  const auto start{std::chrono::steady_clock::now()};
+  if (movetime.has_value()) {
+    limits.deadline = start + std::chrono::milliseconds(*movetime);
+  } else if (time.has_value()) {
+    const int64_t mtg{movestogo > 0 ? movestogo : DEFAULT_MOVES_TO_GO};
+    int64_t budget{(*time / mtg) + (inc / 2)};
+    budget = std::min(budget, *time - MOVE_OVERHEAD_MS);
+    budget = std::max<int64_t>(budget, 1);
+    limits.deadline = start + std::chrono::milliseconds(budget);
   }
 
   Position copy{eng.pos};

@@ -1,3 +1,7 @@
 build/
 .cache/
 compile_commands.json
+
+# fastchess artifacts
+*.pgn
+config.json

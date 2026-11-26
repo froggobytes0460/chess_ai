@@ -4,6 +4,7 @@
 #include <atomic>
 #include <chess_ai/board/position.hpp>
 #include <chess_ai/core/move.hpp>
+#include <chess_ai/search/tt.hpp>
 #include <chrono>
 #include <cstdint>
 #include <limits>
@@ -28,7 +29,7 @@ struct SearchResult {
   int16_t depth{};
 };
 
-auto search(Position& pos, const SearchLimits& limits, std::atomic<bool>& stop)
-    -> SearchResult;
+auto search(Position& pos, const SearchLimits& limits, TranspositionTable& tt,
+            std::atomic<bool>& stop) -> SearchResult;
 
 #endif  // !CHESS_AI_SEARCH_SEARCH_HPP

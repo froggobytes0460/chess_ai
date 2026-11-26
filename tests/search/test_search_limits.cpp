@@ -7,6 +7,7 @@
 #include <chess_ai/core/types.hpp>
 #include <chess_ai/movegen/movegen.hpp>
 #include <chess_ai/search/search.hpp>
+#include <chess_ai/search/tt.hpp>
 #include <chrono>
 #include <cstdint>
 #include <limits>
@@ -66,11 +67,12 @@ TEST_P(SearchLimitsTest, StopsWithLegalMoveAndRestoredPosition) {
   const uint64_t key_before{pos.zobristKey()};
 
   SearchLimits limits{.nodes = param.nodes};
+  TranspositionTable tt{1};
   if (param.deadline_passed) {
     limits.deadline = std::chrono::steady_clock::now();
   }
   std::atomic<bool> stop{param.stop_set};
-  const SearchResult res = search(pos, limits, stop);
+  const SearchResult res = search(pos, limits, tt, stop);
 
   EXPECT_EQ(pos.toFEN(), fen_before);
   EXPECT_EQ(pos.zobristKey(), key_before);

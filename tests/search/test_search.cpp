@@ -5,6 +5,7 @@
 #include <chess_ai/core/move.hpp>
 #include <chess_ai/core/types.hpp>
 #include <chess_ai/search/search.hpp>
+#include <chess_ai/search/tt.hpp>
 #include <cstdint>
 #include <optional>
 #include <ostream>
@@ -60,8 +61,9 @@ TEST_P(SearchTest, SearchTest) {
   const SearchCase& param = GetParam();
   Position pos(param.fen);
   std::atomic<bool> stop{false};
+  TranspositionTable tt{1};
   SearchResult res =
-      search(pos, {.depth = static_cast<int>(param.depth)}, stop);
+      search(pos, {.depth = static_cast<int>(param.depth)}, tt, stop);
 
   if (param.best_move.has_value()) {
     EXPECT_EQ(res.best_move, param.best_move);

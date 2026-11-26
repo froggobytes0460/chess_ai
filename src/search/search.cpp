@@ -8,9 +8,11 @@
 #include <chess_ai/eval/eval.hpp>
 #include <chess_ai/movegen/movegen.hpp>
 #include <chess_ai/search/search.hpp>
+#include <chess_ai/search/tt.hpp>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <utility>
 
 namespace {
@@ -18,9 +20,31 @@ constexpr int32_t INF{32000};
 constexpr std::array<int32_t, 6> ORDER_VALUE{10, 9, 5, 3, 3, 1};
 constexpr int32_t PV_SCORE{1'000'000};
 constexpr int32_t PROMO_BONUS{10'000};
+constexpr int32_t MATE_BOUND{MATE - MAX_PLY};
+
+// Mate scores are root-relative in search, node-relative in the TT.
+constexpr auto toTT(int32_t score, int ply) -> int32_t {
+  if (score >= MATE_BOUND) {
+    return score + ply;
+  }
+  if (score <= -MATE_BOUND) {
+    return score - ply;
+  }
+  return score;
+}
+constexpr auto fromTT(int32_t score, int ply) -> int32_t {
+  if (score >= MATE_BOUND) {
+    return score - ply;
+  }
+  if (score <= -MATE_BOUND) {
+    return score + ply;
+  }
+  return score;
+}
 
 struct SearchContext {
   SearchLimits limits;
+  TranspositionTable* tt{};
   std::atomic<bool>* stop{};
   uint64_t nodes{};
   bool can_stop{false};
@@ -144,12 +168,29 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
   if (depth == 0) {
     return quiescence(pos, alpha, beta, ply, ctx);
   }
+
+  const uint64_t key{pos.zobristKey()};
+  const auto tt_entry{ctx.tt->probe(key)};
+  Move tt_move{};
+  if (tt_entry.has_value()) {
+    tt_move = tt_entry->move;
+    const int32_t tt_score = fromTT(tt_entry->score, ply);
+    if (tt_entry->depth >= depth &&
+        (tt_entry->bound == Bound::EXACT ||
+         (tt_entry->bound == Bound::LOWER && tt_score >= beta) ||
+         (tt_entry->bound == Bound::UPPER && tt_score <= alpha))) {
+      return tt_score;
+    }
+  }
+
+  const int32_t alpha_orig = alpha;
   int32_t best = -INF;
+  Move best_move{};
   bool legal_moves_left = false;
   MoveList moves;
   generatePseudoLegalMoves(pos, moves);
   ScoreList scores;
-  scoreMoves(pos, moves, scores, Move{});
+  scoreMoves(pos, moves, scores, tt_move);
 
   for (size_t i = 0; i < moves.size(); ++i) {
     pickNext(moves, scores, i);
@@ -169,15 +210,27 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
       return 0;
     }
 
-    best = std::max(score, best);
+    if (score > best) {
+      best = score;
+      best_move = move;
+    }
     alpha = std::max(score, alpha);
     if (score >= beta) {
       break;
     }
   }
   if (!legal_moves_left) {
-    return inCheck(pos, pos.sideToMove()) ? -MATE + ply : 0;
+    best = inCheck(pos, pos.sideToMove()) ? -MATE + ply : 0;
+    ctx.tt->store(key, Move{}, toTT(best, ply), depth, Bound::EXACT);
+    return best;
   }
+  Bound bound{Bound::EXACT};
+  if (best >= beta) {
+    bound = Bound::LOWER;
+  } else if (best <= alpha_orig) {
+    bound = Bound::UPPER;
+  }
+  ctx.tt->store(key, best_move, toTT(best, ply), depth, bound);
   return best;
 }
 
@@ -222,10 +275,10 @@ auto rootSearch(Position& pos, int depth, Move pv_move, SearchContext& ctx)
 }
 }  // namespace
 
-auto search(Position& pos, const SearchLimits& limits, std::atomic<bool>& stop)
-    -> SearchResult {
+auto search(Position& pos, const SearchLimits& limits, TranspositionTable& tt,
+            std::atomic<bool>& stop) -> SearchResult {
   SearchResult result{};
-  SearchContext ctx{.limits = limits, .stop = &stop};
+  SearchContext ctx{.limits = limits, .tt = &tt, .stop = &stop};
   for (int d = 1; d <= limits.depth; ++d) {
     const SearchResult iter = rootSearch(pos, d, result.best_move, ctx);
     if (isStopped(ctx)) {

@@ -5,9 +5,11 @@
 #include <chess_ai/core/move.hpp>
 #include <chess_ai/core/types.hpp>
 #include <chess_ai/search/search.hpp>
+#include <chess_ai/search/tt.hpp>
 #include <chess_ai/uci/move_conv.hpp>
 #include <chess_ai/uci/uci.hpp>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <format>
@@ -25,9 +27,13 @@ constexpr std::string_view START_POS{
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"};
 constexpr int64_t MOVE_OVERHEAD_MS{50};
 constexpr int64_t DEFAULT_MOVES_TO_GO{30};
+constexpr int64_t HASH_DEFAULT_MB{16};
+constexpr int64_t HASH_MIN_MB{1};
+constexpr int64_t HASH_MAX_MB{1024};
 
 struct Engine {
   Position pos{START_POS};
+  TranspositionTable tt{HASH_DEFAULT_MB};
   std::atomic<bool> stop{false};
   std::jthread worker;
   bool infinite{false};
@@ -81,6 +87,22 @@ void handlePosition(Engine& eng, std::istringstream& args) {
     static_cast<void>(eng.pos.makeMove(*move));
   }
 }
+// `setoption name <id> [value <x>]`; unknown options and bad values ignored.
+void handleSetOption(Engine& eng, std::istringstream& args) {
+  std::string token;
+  std::string name;
+  args >> token >> name;
+  if (token != "name" || name != "Hash") {
+    return;
+  }
+  int64_t mb{};
+  if (!(args >> token >> mb) || token != "value") {
+    return;
+  }
+  stopEngine(eng);
+  eng.tt.resize(static_cast<size_t>(std::clamp(mb, HASH_MIN_MB, HASH_MAX_MB)));
+}
+
 void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
   SearchLimits limits{};
   std::optional<int64_t> wtime;
@@ -139,7 +161,7 @@ void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
   eng.stop = false;
   eng.worker = std::jthread([&eng, &out, copy = eng.pos, limits,
                              infinite = eng.infinite]() mutable -> void {
-    const SearchResult res{search(copy, limits, eng.stop)};
+    const SearchResult res{search(copy, limits, eng.tt, eng.stop)};
     if (infinite) {
       eng.stop.wait(false);
     }
@@ -166,14 +188,22 @@ void uciLoop(std::istream& in_stream, std::ostream& out_stream) {
     args >> cmd;
 
     if (cmd == "uci") {
-      std::osyncstream{out_stream} << "id name chess_ai\n"
-                                   << "id author Yasir Atiq Mohammed\n"
-                                   << "uciok" << std::endl;
+      std::osyncstream{out_stream}
+          << "id name chess_ai\n"
+          << "id author Yasir Atiq Mohammed\n"
+          << std::format(
+                 "option name Hash type spin default "
+                 "{} min {} max {}\n",
+                 HASH_DEFAULT_MB, HASH_MIN_MB, HASH_MAX_MB)
+          << "uciok" << std::endl;
     } else if (cmd == "isready") {
       std::osyncstream{out_stream} << "readyok" << std::endl;
     } else if (cmd == "ucinewgame") {
       stopEngine(eng);
+      eng.tt.clear();
       eng.pos = Position{START_POS};
+    } else if (cmd == "setoption") {
+      handleSetOption(eng, args);
     } else if (cmd == "position") {
       handlePosition(eng, args);
     } else if (cmd == "go") {

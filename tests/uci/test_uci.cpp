@@ -143,6 +143,13 @@ INSTANTIATE_TEST_SUITE_P(Responses, UciResponseTest,
                                  .present = true,
                              },
                              ResponseCase{
+                                 .name = "HashOption",
+                                 .script = "uci\n",
+                                 .expected = "option name Hash type spin "
+                                             "default 16 min 1 max 1024\n",
+                                 .present = true,
+                             },
+                             ResponseCase{
                                  .name = "ReadyOk",
                                  .script = "isready\n",
                                  .expected = "readyok",
@@ -294,6 +301,33 @@ INSTANTIATE_TEST_SUITE_P(
             .script = "position startpos moves e2e4\ngo depth 2\n"
                       "go depth 1\n",
             .fen = AFTER_E4,
+        },
+        LegalCase{
+            .name = "SetHash",
+            .script = "setoption name Hash value 1\ngo depth 3\n",
+            .fen = STARTPOS,
+        },
+        LegalCase{
+            .name = "SetHashClamped",
+            .script = "setoption name Hash value 0\ngo depth 3\n",
+            .fen = STARTPOS,
+        },
+        LegalCase{
+            .name = "SetHashBadValueIgnored",
+            .script = "setoption name Hash value x\ngo depth 3\n",
+            .fen = STARTPOS,
+        },
+        LegalCase{
+            .name = "UnknownOptionIgnored",
+            .script = "setoption name Foo value 1\ngo depth 1\n",
+            .fen = STARTPOS,
+        },
+        // Resize must wait for the running search, which reads the table.
+        LegalCase{
+            .name = "SetHashDuringSearch",
+            .script = "go infinite\nsetoption name Hash value 2\n"
+                      "go depth 2\n",
+            .fen = STARTPOS,
         },
         LegalCase{
             .name = "DepthZeroClampedToOne",

@@ -165,6 +165,42 @@ INSTANTIATE_TEST_SUITE_P(Responses, UciResponseTest,
                                  .script = "position startpos\ngo depth 1\n",
                                  .expected = "info depth 1 ",
                                  .present = true,
+                             },
+                             ResponseCase{
+                                 .name = "QuietScoreInCentipawns",
+                                 .script = "position startpos\ngo depth 2\n",
+                                 .expected = "score cp ",
+                                 .present = true,
+                             },
+                             // Ra8# next move.
+                             ResponseCase{
+                                 .name = "MateInOneScore",
+                                 .script = "position fen 6k1/5ppp/8/8/8/8/8/"
+                                           "R5K1 w - - 0 1\ngo depth 2\n",
+                                 .expected = "score mate 1 ",
+                                 .present = true,
+                             },
+                             ResponseCase{
+                                 .name = "MateScoreNotCentipawns",
+                                 .script = "position fen 6k1/5ppp/8/8/8/8/8/"
+                                           "R5K1 w - - 0 1\ngo depth 2\n",
+                                 .expected = "score cp ",
+                                 .present = false,
+                             },
+                             // Only move a3a4, then Rh1#.
+                             ResponseCase{
+                                 .name = "MatedInOneScore",
+                                 .script = "position fen 7r/8/8/8/8/P7/P1k5/"
+                                           "K7 w - - 0 1\ngo depth 3\n",
+                                 .expected = "score mate -1 ",
+                                 .present = true,
+                             },
+                             ResponseCase{
+                                 .name = "NoLegalMoveScoresZero",
+                                 .script = "position fen 7k/5Q2/6K1/8/8/8/8/8 "
+                                           "b - - 0 1\ngo depth 2\n",
+                                 .expected = "score cp 0 ",
+                                 .present = true,
                              }),
                          [](const testing::TestParamInfo<ResponseCase>& info)
                              -> std::string { return info.param.name; });

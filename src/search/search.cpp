@@ -15,9 +15,6 @@
 
 namespace {
 constexpr int32_t INF{32000};
-constexpr int32_t MATE{31000};
-// Hard depth bound: check extensions can keep depth from shrinking.
-constexpr int MAX_PLY{128};
 constexpr std::array<int32_t, 6> ORDER_VALUE{10, 9, 5, 3, 3, 1};
 constexpr int32_t PV_SCORE{1'000'000};
 constexpr int32_t PROMO_BONUS{10'000};

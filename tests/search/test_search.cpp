@@ -12,8 +12,6 @@
 #include <string_view>
 
 namespace {
-constexpr int32_t MATE{31000};
-
 struct SearchCase {
   const char* name{};
   const char* fen{};

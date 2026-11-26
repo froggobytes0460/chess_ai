@@ -9,6 +9,7 @@
 #include <chess_ai/uci/uci.hpp>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <format>
 #include <istream>
 #include <optional>
@@ -38,6 +39,14 @@ void stopEngine(Engine& eng) {
   if (eng.worker.joinable()) {
     eng.worker.join();
   }
+}
+
+auto formatScore(int32_t score) -> std::string {
+  if (std::abs(score) < MATE - MAX_PLY) {
+    return std::format("cp {}", score);
+  }
+  const int32_t moves{score > 0 ? (MATE - score + 1) / 2 : -(MATE + score) / 2};
+  return std::format("mate {}", moves);
 }
 
 void handlePosition(Engine& eng, std::istringstream& args) {
@@ -135,8 +144,10 @@ void handleGo(Engine& eng, std::istringstream& args, std::ostream& out) {
       eng.stop.wait(false);
     }
     std::osyncstream sync{out};
-    sync << std::format("info depth {} score cp {} nodes {}\n", res.depth,
-                        res.score, res.nodes)
+    sync << std::format(
+                "info depth {} score {} nodes {}\n", res.depth,
+                res.best_move == Move{} ? "cp 0" : formatScore(res.score),
+                res.nodes)
          << std::format("bestmove {}", res.best_move == Move{}
                                            ? "0000"
                                            : moveToUci(res.best_move))

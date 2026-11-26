@@ -9,6 +9,8 @@
 #include <limits>
 
 constexpr int MAX_DEPTH{12};
+constexpr int32_t MATE{31000};
+constexpr int32_t MAX_PLY{128};
 
 struct SearchLimits {
   int depth{MAX_DEPTH};

@@ -267,7 +267,8 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
   } else if (best <= alpha_orig) {
     bound = Bound::UPPER;
   }
-  ctx.tt->store(key, best_move, toTT(best, ply), depth, bound);
+  ctx.tt->store(key, bound == Bound::UPPER ? Move{} : best_move,
+                toTT(best, ply), depth, bound);
   return best;
 }
 

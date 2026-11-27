@@ -12,11 +12,11 @@
 // State destroyed by `Position::makeMove`, needed by `Position::undoMove` to
 // restore the previous position.
 struct MoveState {
-  uint64_t zobrist_key;
-  uint16_t half_move_clock;
-  uint8_t castling_rights_bits;
-  Square en_passant;
-  Piece captured;  // `Piece::NONE` if the move was not a capture
+  uint64_t zobrist_key{};
+  uint16_t half_move_clock{};
+  uint8_t castling_rights_bits{};
+  Square en_passant{Square::NONE};
+  Piece captured{Piece::NONE};  // `Piece::NONE` if the move was not a capture
 };
 
 class Position {
@@ -101,7 +101,11 @@ class Position {
 
   [[nodiscard]] auto makeMove(Move move) -> MoveState;
 
+  [[nodiscard]] auto makeNullMove() -> MoveState;
+
   void undoMove(Move move, MoveState move_state);
+
+  void undoNullMove(MoveState move_state);
 
   [[nodiscard]] auto isRepetition() const -> bool;
 

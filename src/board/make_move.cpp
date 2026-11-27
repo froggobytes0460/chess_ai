@@ -149,3 +149,27 @@ void Position::undoMove(Move move, MoveState move_state) {
   en_passant_ = move_state.en_passant;
   zobrist_key_ = move_state.zobrist_key;
 }
+
+auto Position::makeNullMove() -> MoveState {
+  const MoveState state{
+      .zobrist_key = zobrist_key_,
+      .half_move_clock = half_move_clock_,
+      .en_passant = en_passant_,
+  };
+
+  side_to_move_ = opposite(side_to_move_);
+  zobrist_key_ ^= getZobristKeyForSideToMove();
+
+  setEnPassant(Square::NONE);
+
+  half_move_clock_ = 0;
+
+  return state;
+}
+
+void Position::undoNullMove(MoveState move_state) {
+  side_to_move_ = opposite(side_to_move_);
+  zobrist_key_ = move_state.zobrist_key;
+  half_move_clock_ = move_state.half_move_clock;
+  en_passant_ = move_state.en_passant;
+}

@@ -184,7 +184,7 @@ auto quiescence(Position& pos, int32_t alpha, int32_t beta, int ply,
 }
 
 auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
-             SearchContext& ctx) -> int32_t {
+             SearchContext& ctx, bool allow_null) -> int32_t {
   if (shouldStop(ctx)) {
     return 0;
   }
@@ -196,10 +196,11 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
       pos.halfMoveClock() >= 100) {
     return 0;
   }
-  if (inCheck(pos, pos.sideToMove())) {
+  const bool in_check = inCheck(pos, pos.sideToMove());
+  if (in_check) {
     ++depth;
   }
-  if (depth == 0) {
+  if (depth <= 0) {
     return quiescence(pos, alpha, beta, ply, ctx);
   }
 
@@ -214,6 +215,24 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
          (tt_entry->bound == Bound::LOWER && tt_score >= beta) ||
          (tt_entry->bound == Bound::UPPER && tt_score <= alpha))) {
       return tt_score;
+    }
+  }
+
+  const Color us = pos.sideToMove();
+  const bool has_pieces = (pos.occupied(us) ^ pos.pieces(us, PieceType::PAWN) ^
+                           pos.pieces(us, PieceType::KING)) != 0;
+  if (allow_null && !in_check && depth >= 3 && has_pieces &&
+      evaluate(pos) >= beta) {
+    constexpr int R = 3;
+    const MoveState state = pos.makeNullMove();
+    const int32_t score =
+        -negamax(pos, depth - 1 - R, -beta, -beta + 1, ply + 1, ctx, false);
+    pos.undoNullMove(state);
+    if (shouldStop(ctx)) {
+      return 0;
+    }
+    if (score >= beta) {
+      return score >= MATE_BOUND ? beta : score;
     }
   }
 
@@ -238,7 +257,8 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
       continue;
     }
     legal_moves_left = true;
-    const int32_t score = -negamax(pos, depth - 1, -beta, -alpha, ply + 1, ctx);
+    const int32_t score =
+        -negamax(pos, depth - 1, -beta, -alpha, ply + 1, ctx, true);
     pos.undoMove(move, state);
     if (isStopped(ctx)) {
       return 0;
@@ -257,7 +277,7 @@ auto negamax(Position& pos, int depth, int32_t alpha, int32_t beta, int ply,
     }
   }
   if (!legal_moves_left) {
-    best = inCheck(pos, pos.sideToMove()) ? -MATE + ply : 0;
+    best = in_check ? -MATE + ply : 0;
     ctx.tt->store(key, Move{}, toTT(best, ply), depth, Bound::EXACT);
     return best;
   }
@@ -295,7 +315,7 @@ auto rootSearch(Position& pos, int depth, Move pv_move, SearchContext& ctx)
       continue;
     }
     legal_moves_left = true;
-    const int32_t score = -negamax(pos, depth - 1, -INF, -alpha, 1, ctx);
+    const int32_t score = -negamax(pos, depth - 1, -INF, -alpha, 1, ctx, true);
     pos.undoMove(move, state);
     if (isStopped(ctx)) {
       return result;
